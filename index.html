@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Atlas Letters — typography spliced from Google imagery</title>
+<title>Atlas Letters — architecture into letterforms</title>
 <style>
   :root {
     --bg: #0e0e10;
@@ -16,190 +16,160 @@
     --text-3: #61616b;
     --accent: #ff5a1f;
     --accent-2: #ffb08a;
-    --danger: #ff3b30;
     --ok: #34c759;
+    --danger: #ff3b30;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--text); font: 12px/1.4 -apple-system, "SF Pro Text", "Inter", system-ui, sans-serif; overflow: hidden; }
-  button, input, select, textarea { font: inherit; color: inherit; }
+  html, body { margin:0; padding:0; height:100%; background:var(--bg); color:var(--text); font:12px/1.4 -apple-system,"SF Pro Text","Inter",system-ui,sans-serif; overflow:hidden; }
+  button, input, select, textarea { font:inherit; color:inherit; }
   a { color: var(--accent-2); }
+  ::selection { background: var(--accent); color: #fff; }
 
-  #app { display: grid; grid-template-columns: 340px 1fr; height: 100vh; }
+  /* App */
+  #app { display:grid; grid-template-rows: auto 1fr; height:100vh; }
 
-  /* ---------------- Sidebar ---------------- */
-  #sidebar {
+  /* Topbar */
+  #topbar {
+    display:flex; align-items:center; gap:10px;
+    padding:10px 16px;
     background: var(--panel);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    display: flex; flex-direction: column;
-    scrollbar-width: thin; scrollbar-color: var(--border-2) transparent;
+    border-bottom:1px solid var(--border);
+    z-index: 10;
   }
-  #sidebar::-webkit-scrollbar { width: 8px; }
-  #sidebar::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+  #topbar .brand { display:flex; align-items:baseline; gap:8px; margin-right:12px; }
+  #topbar h1 { margin:0; font-size:13px; font-weight:600; letter-spacing:0.04em; text-transform:uppercase; }
+  #topbar .brand .subtitle { color:var(--text-3); font-size:10px; letter-spacing:0.1em; text-transform:uppercase; }
 
-  #sidebar > header {
-    padding: 14px 16px 12px;
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: baseline; gap: 8px;
-    position: sticky; top: 0; background: var(--panel); z-index: 2;
-  }
-  #sidebar > header h1 {
-    margin: 0; font-size: 13px; font-weight: 600; letter-spacing: 0.02em; text-transform: uppercase;
-  }
-  #sidebar > header .subtitle { color: var(--text-3); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; }
-
-  details.panel {
-    border-bottom: 1px solid var(--border);
-  }
-  details.panel > summary {
-    list-style: none;
-    cursor: pointer;
-    padding: 10px 16px;
-    display: flex; align-items: center; gap: 8px;
-    font-size: 10.5px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--text-2);
-    user-select: none;
-  }
-  details.panel > summary::-webkit-details-marker { display: none; }
-  details.panel > summary::before {
-    content: "▸";
-    color: var(--text-3);
-    font-size: 9px;
-    transition: transform 0.15s;
-  }
-  details.panel[open] > summary::before { transform: rotate(90deg); }
-  details.panel > summary:hover { color: var(--text); }
-
-  .panel-body { padding: 4px 16px 16px; display: grid; gap: 10px; }
-  .row { display: grid; grid-template-columns: 88px 1fr; align-items: center; gap: 8px; }
-  .row.full { grid-template-columns: 1fr; }
-  .row.split { grid-template-columns: 1fr 1fr; }
-  .row label { color: var(--text-2); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .row .value { color: var(--text-3); font-family: "SF Mono", ui-monospace, monospace; font-size: 10.5px; text-align: right; }
-
-  input[type="text"], input[type="password"], input[type="number"], textarea, select {
+  .ac-wrap { position:relative; min-width:280px; }
+  #topbar input[type="text"], #topbar input[type="password"] {
     background: var(--panel-2);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 5px 7px;
-    color: var(--text);
-    width: 100%;
-    min-width: 0;
-    outline: none;
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:6px 9px;
+    color:var(--text);
+    outline:none;
+    width:100%;
+    min-width:0;
   }
-  input[type="text"]:focus, input[type="password"]:focus, input[type="number"]:focus,
-  textarea:focus, select:focus {
-    border-color: var(--accent);
-  }
-  textarea { resize: vertical; min-height: 54px; font-family: inherit; }
-  input[type="color"] { width: 100%; height: 28px; padding: 0; border: 1px solid var(--border); background: var(--panel-2); border-radius: 4px; cursor: pointer; }
+  #topbar input[type="text"]:focus, #topbar input[type="password"]:focus { border-color:var(--accent); }
 
-  .slider-row { display: grid; grid-template-columns: 88px 1fr 44px; align-items: center; gap: 8px; }
-  .slider-row label { color: var(--text-2); font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; }
-  .slider-row input[type="range"] { width: 100%; accent-color: var(--accent); }
-  .slider-row .value { color: var(--text); font-family: "SF Mono", ui-monospace, monospace; font-size: 10.5px; text-align: right; }
+  .ac-list {
+    position:absolute; top:calc(100% + 3px); left:0; right:0;
+    background: var(--panel-2);
+    border:1px solid var(--border-2);
+    border-radius:4px;
+    max-height:280px; overflow-y:auto;
+    z-index:100;
+    display:none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+  .ac-list.open { display:block; }
+  .ac-item {
+    padding:7px 10px; cursor:pointer;
+    border-bottom:1px solid var(--border);
+  }
+  .ac-item:last-child { border-bottom:0; }
+  .ac-item.active, .ac-item:hover { background:var(--border); }
+  .ac-item .main { color:var(--text); font-size:11.5px; }
+  .ac-item .sub { color:var(--text-3); font-size:10px; margin-top:1px; }
+
+  .modeswitch { display:flex; margin-left:12px; border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+  .modeswitch button {
+    background:var(--panel-2); border:0; color:var(--text-2);
+    padding:7px 14px; cursor:pointer;
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    border-right:1px solid var(--border);
+  }
+  .modeswitch button:last-child { border-right:0; }
+  .modeswitch button.active { background:var(--accent); color:#fff; }
+  .modeswitch button:hover:not(.active) { background:var(--border); color:var(--text); }
+
+  #status {
+    margin-left:auto;
+    font-family:"SF Mono",ui-monospace,monospace; font-size:10.5px;
+    color:var(--text-2);
+    max-width:420px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  }
+  #status.loading::before { content:"● "; color:var(--accent); animation:pulse 1s infinite; }
+  #status.error { color:var(--danger); }
+  #status.ok { color:var(--ok); }
+  @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
   .btn {
     background: var(--panel-2);
-    border: 1px solid var(--border);
-    color: var(--text);
-    padding: 6px 10px;
-    border-radius: 4px;
-    cursor: pointer;
+    border:1px solid var(--border);
+    color:var(--text);
+    padding:6px 10px;
+    border-radius:4px;
+    cursor:pointer;
     transition: background 0.1s, border-color 0.1s;
-    text-align: center;
-    font-size: 11px;
-    letter-spacing: 0.02em;
+    text-align:center; font-size:11px;
   }
-  .btn:hover { background: var(--border); }
-  .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-  .btn.primary:hover { filter: brightness(1.08); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn:hover { background:var(--border); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  .btn.primary:hover { filter:brightness(1.08); }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn.small { padding:4px 8px; font-size:10.5px; }
 
-  .seg { display: flex; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; }
-  .seg button {
-    flex: 1;
-    background: var(--panel-2);
-    border: 0;
+  /* Workspace */
+  #workspace { overflow:hidden; position:relative; }
+  .mode { position:absolute; inset:0; display:none; }
+  .mode.active { display:grid; }
+
+  /* ============ EXPLORE MODE ============ */
+  #explore.active { grid-template-columns: 260px 1fr 280px; }
+
+  aside.side {
+    background: var(--panel);
+    border-right:1px solid var(--border);
+    overflow-y:auto;
+    padding: 12px 14px 20px;
+    scrollbar-width: thin; scrollbar-color: var(--border-2) transparent;
+  }
+  aside.side::-webkit-scrollbar { width:8px; }
+  aside.side::-webkit-scrollbar-thumb { background:var(--border-2); border-radius:4px; }
+  aside.side.right { border-right:0; border-left:1px solid var(--border); }
+
+  .group-title {
     color: var(--text-2);
-    padding: 6px 8px;
-    cursor: pointer;
-    font-size: 10.5px;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border-right: 1px solid var(--border);
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
+    margin: 6px 0 8px;
+    padding-bottom: 4px;
+    border-bottom:1px solid var(--border);
   }
-  .seg button:last-child { border-right: 0; }
-  .seg button.active { background: var(--accent); color: #fff; }
-  .seg button:hover:not(.active) { background: var(--border); color: var(--text); }
+  .group-title:first-child { margin-top:0; }
 
-  .thumbs {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 4px;
-    max-height: 200px;
-    overflow-y: auto;
-    padding: 4px 0;
-  }
-  .thumb {
-    position: relative;
-    aspect-ratio: 1;
-    background: var(--panel-2);
-    border: 1px solid var(--border);
-    border-radius: 3px;
-    overflow: hidden;
-    cursor: pointer;
-  }
-  .thumb.primary { border-color: var(--accent); }
-  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; filter: grayscale(1); }
-  .thumb .badge {
-    position: absolute; top: 2px; left: 2px;
-    background: rgba(0,0,0,0.7); color: #fff;
-    font-size: 8px; padding: 1px 4px; border-radius: 2px;
-    letter-spacing: 0.05em; text-transform: uppercase;
-  }
-  .thumb .remove {
-    position: absolute; top: 2px; right: 2px;
-    background: rgba(0,0,0,0.7); color: #fff;
-    width: 14px; height: 14px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    cursor: pointer; font-size: 11px;
-    opacity: 0; transition: opacity 0.1s;
-  }
-  .thumb:hover .remove { opacity: 1; }
+  .row { display:grid; grid-template-columns:80px 1fr; align-items:center; gap:8px; margin-bottom:6px; }
+  .row.full { grid-template-columns:1fr; }
+  .row label { color:var(--text-2); font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; }
 
-  .hint { color: var(--text-3); font-size: 10.5px; line-height: 1.4; }
-  .hint a { color: var(--text-2); text-decoration: underline; }
+  .slider-row { display:grid; grid-template-columns:80px 1fr 42px; align-items:center; gap:8px; margin-bottom:6px; }
+  .slider-row label { color:var(--text-2); font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase; }
+  .slider-row input[type="range"] { width:100%; accent-color:var(--accent); }
+  .slider-row .value { color:var(--text); font-family:"SF Mono",ui-monospace,monospace; font-size:10.5px; text-align:right; }
 
-  /* Autocomplete */
-  .ac-wrap { position: relative; }
-  .ac-list {
-    position: absolute;
-    top: calc(100% + 2px); left: 0; right: 0;
-    background: var(--panel-2);
-    border: 1px solid var(--border-2);
-    border-radius: 4px;
-    max-height: 240px;
-    overflow-y: auto;
-    z-index: 20;
-    display: none;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  .seg { display:flex; border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+  .seg button {
+    flex:1; background:var(--panel-2); border:0; color:var(--text-2);
+    padding:5px 6px; cursor:pointer;
+    font-size:10.5px; letter-spacing:0.04em; text-transform:uppercase;
+    border-right:1px solid var(--border);
   }
-  .ac-list.open { display: block; }
-  .ac-item {
-    padding: 7px 10px;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border);
-  }
-  .ac-item:last-child { border-bottom: 0; }
-  .ac-item.active, .ac-item:hover { background: var(--border); }
-  .ac-item .main { color: var(--text); font-size: 11.5px; }
-  .ac-item .sub { color: var(--text-3); font-size: 10px; margin-top: 1px; }
-  .ac-empty { padding: 8px 10px; color: var(--text-3); font-size: 10.5px; }
+  .seg button:last-child { border-right:0; }
+  .seg button.active { background:var(--accent); color:#fff; }
+  .seg button:hover:not(.active) { background:var(--border); color:var(--text); }
 
-  /* ---------------- Stage ---------------- */
-  #stage {
-    display: flex; flex-direction: column;
+  input[type="number"], select, textarea {
+    background:var(--panel-2); border:1px solid var(--border);
+    border-radius:4px; padding:5px 7px; color:var(--text); width:100%; outline:none;
+  }
+  input[type="color"] {
+    width:100%; height:26px; padding:0; border:1px solid var(--border);
+    background: var(--panel-2); border-radius:4px; cursor:pointer;
+  }
+
+  #images-grid {
     background:
       linear-gradient(45deg, #141418 25%, transparent 25%),
       linear-gradient(-45deg, #141418 25%, transparent 25%),
@@ -208,235 +178,232 @@
       var(--bg);
     background-size: 20px 20px;
     background-position: 0 0, 0 10px, 10px -10px, -10px 0;
-    overflow: hidden;
+    overflow-y:auto;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 14px;
+    align-content: start;
   }
-  #stage-top {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px 16px;
-    background: rgba(14,14,16,0.85);
-    border-bottom: 1px solid var(--border);
-    backdrop-filter: blur(6px);
-    z-index: 2;
+  #images-grid .placeholder {
+    grid-column: 1 / -1;
+    padding:80px 40px;
+    text-align:center;
+    color:var(--text-3);
+    font-size:14px;
+    letter-spacing:0.02em;
   }
-  #stage-top .tab { padding: 4px 10px; border-radius: 4px; font-size: 10.5px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); }
-  #stage-top .tab.active { background: var(--border); color: var(--text); }
-  #stage-top #status { margin-left: auto; color: var(--text-2); font-family: "SF Mono", ui-monospace, monospace; font-size: 10.5px; }
-  #stage-top #status.loading::before { content: "● "; color: var(--accent); animation: pulse 1s infinite; }
-  #stage-top #status.error { color: var(--danger); }
-  #stage-top #status.ok { color: var(--ok); }
-  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+  #images-grid .placeholder .tag {
+    display:inline-block; margin-top:12px;
+    color:var(--accent); font-size:11px; letter-spacing:0.1em; text-transform:uppercase;
+  }
 
-  #canvas-wrap {
-    flex: 1;
-    display: flex; align-items: center; justify-content: center;
-    padding: 32px;
-    overflow: auto;
-    position: relative;
-  }
-  #canvas-scaler {
-    position: relative;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+  .street-card {
+    position:relative;
     background: #000;
-    transition: transform 0.15s;
+    border-radius:4px;
+    overflow:hidden;
+    cursor: zoom-in;
+    aspect-ratio: 1;
+    border: 1px solid var(--border);
+    transition: transform 0.1s, border-color 0.1s;
   }
-  #output { display: block; max-width: 100%; max-height: 100%; }
+  .street-card:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .street-card img { width:100%; height:100%; object-fit:cover; display:block; }
+  .street-card .meta {
+    position:absolute; left:0; bottom:0; right:0;
+    padding:6px 8px;
+    background: linear-gradient(180deg, transparent, rgba(0,0,0,0.7));
+    color: rgba(255,255,255,0.9);
+    font-family:"SF Mono",ui-monospace,monospace; font-size:10px;
+    display:flex; justify-content:space-between; align-items:center;
+    pointer-events:none;
+  }
+  .street-card .meta .kind {
+    background: var(--accent); color:#fff; padding: 1px 5px; border-radius:2px;
+    font-size:8.5px; letter-spacing:0.08em; text-transform:uppercase;
+  }
 
-  #stage-bottom {
-    display: flex; align-items: center; gap: 12px;
-    padding: 8px 16px;
-    background: rgba(14,14,16,0.85);
-    border-top: 1px solid var(--border);
-    font-family: "SF Mono", ui-monospace, monospace;
-    font-size: 10.5px;
-    color: var(--text-2);
-    backdrop-filter: blur(6px);
+  /* Fragments library panel */
+  #fragments-panel h3, #library-panel h3 {
+    margin:0 0 10px;
+    color:var(--text-2);
+    font-size:10.5px; letter-spacing:0.08em; text-transform:uppercase;
   }
-  #stage-bottom .zoom { display: flex; align-items: center; gap: 6px; margin-left: auto; }
-  #stage-bottom .zoom button {
-    background: transparent; border: 1px solid var(--border);
-    width: 22px; height: 22px; border-radius: 4px;
-    color: var(--text-2); cursor: pointer;
-  }
-  #stage-bottom .zoom button:hover { color: var(--text); }
-  #stage-bottom .zoom .z { min-width: 44px; text-align: center; }
+  .frag-count { color:var(--text-3); font-size:10px; letter-spacing:0.05em; text-transform:uppercase; margin-left:6px; }
 
-  #dropzone {
-    position: absolute; inset: 0;
-    display: none; align-items: center; justify-content: center;
-    background: rgba(255,90,31,0.12);
-    border: 3px dashed var(--accent);
-    color: var(--accent);
-    font-size: 18px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
-    z-index: 10;
-    pointer-events: none;
+  .frag-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .frag {
+    position:relative;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    aspect-ratio: 1;
+    overflow:hidden;
+    cursor: grab;
+    display:flex; align-items:center; justify-content:center;
   }
-  #dropzone.active { display: flex; }
+  .frag img { max-width:100%; max-height:100%; object-fit:contain; pointer-events:none; }
+  .frag:hover { border-color: var(--accent); }
+  .frag.dragging { opacity: 0.4; }
+  .frag .del {
+    position:absolute; top:2px; right:2px;
+    width:16px; height:16px; border-radius:50%;
+    background: rgba(0,0,0,0.7); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; cursor:pointer; opacity:0;
+    transition: opacity 0.1s;
+  }
+  .frag:hover .del { opacity:1; }
 
-  .accent-text { color: var(--accent); }
+  /* ============ COMPOSE MODE ============ */
+  #compose.active { grid-template-columns: 240px 1fr 240px; }
+
+  #canvas-area {
+    background:
+      linear-gradient(45deg, #141418 25%, transparent 25%),
+      linear-gradient(-45deg, #141418 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #141418 75%),
+      linear-gradient(-45deg, transparent 75%, #141418 75%),
+      var(--bg);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+    display:flex; align-items:center; justify-content:center;
+    padding: 24px 24px 8px;
+    overflow:auto;
+    position:relative;
+  }
+  #comp-scaler {
+    position:relative;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4), 0 0 0 1px var(--border);
+    background:#fff;
+    transform-origin: center;
+  }
+  #comp-canvas { display:block; }
+  #comp-overlay {
+    position:absolute; inset:0;
+    pointer-events:auto;
+  }
+  #canvas-hint {
+    position:absolute; bottom:8px; left:0; right:0;
+    text-align:center;
+    color:var(--text-3);
+    font-family:"SF Mono",ui-monospace,monospace; font-size:10.5px;
+    pointer-events:none;
+  }
+
+  /* ============ PICKER MODAL ============ */
+  #picker {
+    position:fixed; inset:0;
+    background: rgba(0,0,0,0.85);
+    display:none;
+    align-items:center; justify-content:center;
+    z-index: 500;
+    padding: 40px;
+  }
+  #picker.open { display:flex; flex-direction:column; }
+  #picker-canvas-wrap {
+    position:relative;
+    background:#000;
+    max-height: calc(100vh - 200px);
+    max-width: calc(100vw - 200px);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    cursor: crosshair;
+    user-select:none;
+  }
+  #picker-canvas { display:block; }
+  #picker-marquee {
+    position:absolute;
+    border: 2px dashed var(--accent);
+    background: rgba(255,90,31,0.08);
+    pointer-events:none;
+    display:none;
+  }
+  #picker-toolbar {
+    display:flex; gap:8px; align-items:center;
+    margin-top: 16px;
+    padding: 10px 14px;
+    background: var(--panel);
+    border-radius: 6px;
+    color:var(--text-2);
+    font-size: 11px;
+  }
+  #picker-toolbar .space { flex:1; }
+  #picker-hint {
+    color: var(--text-3);
+    font-family:"SF Mono",ui-monospace,monospace;
+    font-size:10.5px;
+  }
+
+  /* Helpers */
+  .hint { color:var(--text-3); font-size:10.5px; line-height:1.4; margin-top:4px; }
+  .hint a { color:var(--text-2); text-decoration:underline; }
+
+  .divider { height:1px; background:var(--border); margin: 10px 0; }
 </style>
 </head>
 <body>
 
 <div id="app">
 
-  <!-- ============ SIDEBAR ============ -->
-  <aside id="sidebar">
-    <header>
+  <!-- ============ TOPBAR ============ -->
+  <header id="topbar">
+    <div class="brand">
       <h1>Atlas Letters</h1>
-      <span class="subtitle">v0.1</span>
-    </header>
+      <span class="subtitle">v0.2</span>
+    </div>
 
-    <details class="panel" open>
-      <summary>Location</summary>
-      <div class="panel-body">
-        <div class="row full ac-wrap">
-          <input id="query" type="text" placeholder="Start typing a city, or paste lat,lng" value="Marrakesh" autocomplete="off">
-          <div id="ac-list" class="ac-list"></div>
-        </div>
+    <div class="ac-wrap">
+      <input id="query" type="text" placeholder="Type an address or city…" value="" autocomplete="off">
+      <div id="ac-list" class="ac-list"></div>
+    </div>
+
+    <button id="fetch-btn" class="btn primary">Fetch imagery</button>
+
+    <div class="modeswitch">
+      <button data-mode="explore" class="active">Explore</button>
+      <button data-mode="compose">Compose</button>
+    </div>
+
+    <span id="status">Type an address, hit Fetch, then click any image to snip fragments.</span>
+  </header>
+
+  <!-- ============ WORKSPACE ============ -->
+  <div id="workspace">
+
+    <!-- ---------- EXPLORE ---------- -->
+    <section id="explore" class="mode active">
+      <aside class="side">
+        <div class="group-title">Search</div>
         <div class="slider-row">
           <label>Radius km</label>
-          <input id="radius" type="range" min="0.2" max="20" step="0.1" value="2">
-          <span class="value" id="radius-val">2.0</span>
+          <input id="radius" type="range" min="0.05" max="10" step="0.05" value="0.5">
+          <span class="value" id="radius-val">0.5</span>
         </div>
         <div class="slider-row">
           <label>Samples</label>
-          <input id="samples" type="range" min="1" max="24" step="1" value="8">
-          <span class="value" id="samples-val">8</span>
+          <input id="samples" type="range" min="4" max="30" step="1" value="12">
+          <span class="value" id="samples-val">12</span>
         </div>
         <div class="row">
           <label>Sources</label>
           <div class="seg" id="sources-seg">
-            <button data-v="satellite" class="active">Satellite</button>
-            <button data-v="streetview">Street</button>
+            <button data-v="streetview" class="active">Street</button>
+            <button data-v="satellite">Satellite</button>
             <button data-v="both">Both</button>
           </div>
         </div>
-        <div class="row full">
-          <button id="fetch-btn" class="btn primary">Fetch imagery</button>
+        <div class="slider-row">
+          <label>Field of view</label>
+          <input id="fov" type="range" min="30" max="120" step="5" value="70">
+          <span class="value" id="fov-val">70</span>
         </div>
-      </div>
-    </details>
 
-    <details class="panel" open>
-      <summary>Imagery</summary>
-      <div class="panel-body">
-        <div class="row full">
-          <input id="apikey" type="password" placeholder="Using embedded key — paste to override">
-        </div>
-        <div class="hint">
-          A default key is embedded for the hosted site. Paste your own to override — get one at <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Google Cloud console</a> with <b>Maps Static</b>, <b>Street View Static</b>, and <b>Geocoding</b> enabled. Overrides live in your browser only.
-        </div>
-        <div class="row split">
-          <button id="upload-btn" class="btn">Upload files…</button>
-          <button id="clear-btn" class="btn">Clear all</button>
-        </div>
-        <div class="thumbs" id="thumbs"></div>
-      </div>
-    </details>
-
-    <details class="panel" open>
-      <summary>Typography</summary>
-      <div class="panel-body">
-        <div class="row full">
-          <textarea id="text" spellcheck="false">ATLAS</textarea>
-        </div>
-        <div class="row full">
-          <input id="font" type="text" list="fontlist" value="Impact" placeholder="Font family (any installed font)">
-          <datalist id="fontlist">
-            <option>Impact</option>
-            <option>Arial Black</option>
-            <option>Helvetica</option>
-            <option>Helvetica Neue</option>
-            <option>Futura</option>
-            <option>Futura Condensed ExtraBold</option>
-            <option>Georgia</option>
-            <option>Times New Roman</option>
-            <option>Courier New</option>
-            <option>Menlo</option>
-            <option>Avenir Next</option>
-            <option>Didot</option>
-            <option>Bodoni 72</option>
-            <option>Rockwell</option>
-            <option>Baskerville</option>
-          </datalist>
-        </div>
-        <div class="slider-row">
-          <label>Weight</label>
-          <input id="weight" type="range" min="100" max="900" step="100" value="900">
-          <span class="value" id="weight-val">900</span>
-        </div>
-        <div class="slider-row">
-          <label>Size</label>
-          <input id="size" type="range" min="40" max="1200" step="4" value="520">
-          <span class="value" id="size-val">520</span>
-        </div>
-        <div class="slider-row">
-          <label>Tracking</label>
-          <input id="tracking" type="range" min="-40" max="200" step="1" value="0">
-          <span class="value" id="tracking-val">0</span>
-        </div>
-        <div class="slider-row">
-          <label>Leading</label>
-          <input id="leading" type="range" min="0.6" max="2" step="0.02" value="0.9">
-          <span class="value" id="leading-val">0.90</span>
-        </div>
-        <div class="row full">
-          <button id="fit-btn" class="btn">Fit to canvas width</button>
-        </div>
-      </div>
-    </details>
-
-    <details class="panel" open>
-      <summary>Tiling</summary>
-      <div class="panel-body">
-        <div class="slider-row">
-          <label>Columns</label>
-          <input id="cols" type="range" min="4" max="200" step="1" value="60">
-          <span class="value" id="cols-val">60</span>
-        </div>
-        <div class="row">
-          <label>Splice mode</label>
-          <div class="seg" id="mode-seg">
-            <button data-v="slice" class="active">Slice</button>
-            <button data-v="mosaic">Mosaic</button>
-          </div>
-        </div>
-        <div class="row">
-          <label>Tile shape</label>
-          <div class="seg" id="shape-seg">
-            <button data-v="square" class="active">Square</button>
-            <button data-v="circle">Circle</button>
-            <button data-v="diamond">Diamond</button>
-          </div>
-        </div>
-        <div class="slider-row">
-          <label>Tile gap</label>
-          <input id="gap" type="range" min="0" max="20" step="0.5" value="1">
-          <span class="value" id="gap-val">1.0</span>
-        </div>
-        <div class="slider-row">
-          <label>Tile scale</label>
-          <input id="tilescale" type="range" min="0.4" max="1.4" step="0.02" value="1">
-          <span class="value" id="tilescale-val">1.00</span>
-        </div>
-        <div class="slider-row">
-          <label>Seed</label>
-          <input id="seed" type="range" min="0" max="9999" step="1" value="42">
-          <span class="value" id="seed-val">42</span>
-        </div>
-        <div class="row full">
-          <button id="reshuffle-btn" class="btn">Reshuffle</button>
-        </div>
-      </div>
-    </details>
-
-    <details class="panel" open>
-      <summary>Threshold &amp; Look</summary>
-      <div class="panel-body">
+        <div class="group-title">Threshold</div>
         <div class="slider-row">
           <label>Contrast</label>
-          <input id="contrast" type="range" min="100" max="2000" step="10" value="800">
-          <span class="value" id="contrast-val">800</span>
+          <input id="contrast" type="range" min="100" max="2000" step="10" value="1000">
+          <span class="value" id="contrast-val">1000</span>
         </div>
         <div class="slider-row">
           <label>Brightness</label>
@@ -455,230 +422,285 @@
             <button data-v="1">On</button>
           </div>
         </div>
-      </div>
-    </details>
 
-    <details class="panel">
-      <summary>Canvas</summary>
-      <div class="panel-body">
+        <div class="group-title">Key</div>
+        <div class="row full">
+          <input id="apikey" type="password" placeholder="Using embedded key — paste to override">
+        </div>
+        <div class="hint">
+          Overrides live in your browser only. <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Get one</a> with Places API (New), Maps Static, Street View Static enabled.
+        </div>
+      </aside>
+
+      <div id="images-grid">
+        <div class="placeholder">
+          Type an address up top, hit Fetch, and images will appear here.<br>
+          <span class="tag">Click any image to snip a fragment</span>
+        </div>
+      </div>
+
+      <aside class="side right">
+        <div class="group-title">
+          Fragments library
+          <span class="frag-count" id="frag-count-explore">0</span>
+        </div>
+        <div class="frag-grid" id="fragments-explore"></div>
+        <div class="divider"></div>
+        <button id="export-lib" class="btn small">Save library to file</button>
+        <button id="import-lib" class="btn small" style="margin-top:6px;">Load library from file</button>
+        <button id="clear-lib" class="btn small" style="margin-top:6px;">Clear library</button>
+        <div class="hint" style="margin-top:8px;">
+          Library persists in your browser. Save to file for a backup.
+        </div>
+      </aside>
+    </section>
+
+    <!-- ---------- COMPOSE ---------- -->
+    <section id="compose" class="mode">
+      <aside class="side">
+        <div class="group-title">
+          Library
+          <span class="frag-count" id="frag-count-compose">0</span>
+        </div>
+        <div class="frag-grid" id="fragments-compose"></div>
+        <div class="hint" style="margin-top:8px;">
+          Drag a fragment onto the canvas.
+        </div>
+      </aside>
+
+      <div id="canvas-area">
+        <div id="comp-scaler">
+          <canvas id="comp-canvas"></canvas>
+          <div id="comp-overlay"></div>
+        </div>
+        <div id="canvas-hint">Drag from library • click to select • R rotate 90° • F flip • [ ] scale • ⌫ delete</div>
+      </div>
+
+      <aside class="side right">
+        <div class="group-title">Selected</div>
+        <div id="sel-empty" class="hint">Nothing selected. Drop a fragment or click one on the canvas.</div>
+        <div id="sel-controls" style="display:none;">
+          <div class="slider-row">
+            <label>Rotate</label>
+            <input id="sel-rot" type="range" min="-180" max="180" step="1" value="0">
+            <span class="value" id="sel-rot-val">0°</span>
+          </div>
+          <div class="slider-row">
+            <label>Scale</label>
+            <input id="sel-scale" type="range" min="0.1" max="4" step="0.02" value="1">
+            <span class="value" id="sel-scale-val">1.00</span>
+          </div>
+          <div class="row">
+            <label>Flip</label>
+            <div style="display:flex; gap:6px;">
+              <button class="btn small" id="sel-flip-x">Flip X</button>
+              <button class="btn small" id="sel-flip-y">Flip Y</button>
+            </div>
+          </div>
+          <div class="row">
+            <label>Order</label>
+            <div style="display:flex; gap:6px;">
+              <button class="btn small" id="sel-fwd">Forward</button>
+              <button class="btn small" id="sel-back">Back</button>
+            </div>
+          </div>
+          <div class="row full">
+            <button id="sel-delete" class="btn small">Delete selected</button>
+          </div>
+        </div>
+
+        <div class="group-title">Composition</div>
+        <div class="row">
+          <label>Bg</label>
+          <input id="comp-bg" type="color" value="#f5f5f0">
+        </div>
         <div class="row">
           <label>Aspect</label>
-          <select id="aspect">
+          <select id="comp-aspect">
             <option value="1:1">1:1 Square</option>
-            <option value="4:5">4:5 Portrait</option>
+            <option value="4:5" selected>4:5 Portrait</option>
+            <option value="2:3">2:3 Portrait</option>
+            <option value="3:2">3:2 Landscape</option>
             <option value="16:9">16:9 Landscape</option>
             <option value="9:16">9:16 Vertical</option>
-            <option value="3:2">3:2</option>
-            <option value="2:3">2:3</option>
             <option value="A4">A4 Portrait</option>
           </select>
         </div>
         <div class="row">
           <label>Resolution</label>
-          <select id="resolution">
-            <option value="1080">1080 px</option>
-            <option value="1440">1440 px</option>
-            <option value="2160" selected>2160 px</option>
-            <option value="3240">3240 px</option>
-            <option value="4320">4320 px</option>
+          <select id="comp-res">
+            <option value="1080">1080</option>
+            <option value="1440">1440</option>
+            <option value="2160" selected>2160</option>
+            <option value="3240">3240</option>
           </select>
         </div>
         <div class="row">
-          <label>Background</label>
-          <input id="bg" type="color" value="#0a0a0a">
+          <label>Grid</label>
+          <div class="seg" id="grid-seg">
+            <button data-v="0" class="active">Off</button>
+            <button data-v="1">On</button>
+          </div>
         </div>
-      </div>
-    </details>
+        <div class="slider-row">
+          <label>Grid size</label>
+          <input id="grid-size" type="range" min="10" max="200" step="1" value="60">
+          <span class="value" id="grid-size-val">60</span>
+        </div>
+        <div class="row">
+          <label>Snap</label>
+          <div class="seg" id="snap-seg">
+            <button data-v="0" class="active">Off</button>
+            <button data-v="1">On</button>
+          </div>
+        </div>
 
-    <details class="panel">
-      <summary>Export</summary>
-      <div class="panel-body">
+        <div class="group-title">Export</div>
         <div class="row full">
-          <input id="filename" type="text" value="atlas-letters">
+          <input id="filename" type="text" value="atlas-composition">
         </div>
         <div class="row full">
-          <button id="export-btn" class="btn primary">Save PNG</button>
+          <button id="export-png" class="btn primary">Save PNG</button>
         </div>
-        <div class="hint">Cropping tainted-canvas exports may fail if a source image was blocked by CORS. Google's static image APIs return proper CORS headers.</div>
-      </div>
-    </details>
-  </aside>
-
-  <!-- ============ STAGE ============ -->
-  <main id="stage">
-    <div id="stage-top">
-      <span class="tab active">Design</span>
-      <span class="tab" id="preview-tab">Preview</span>
-      <span id="status">Ready. Type a place and hit “Fetch imagery”, or drag an image in.</span>
-    </div>
-
-    <div id="canvas-wrap">
-      <div id="canvas-scaler">
-        <canvas id="output"></canvas>
-      </div>
-      <div id="dropzone">Drop image here</div>
-    </div>
-
-    <div id="stage-bottom">
-      <span id="dimensions">— × —</span>
-      <span id="tilecount">0 tiles</span>
-      <div class="zoom">
-        <button id="zoom-out">−</button>
-        <span class="z" id="zoom-val">Fit</span>
-        <button id="zoom-in">+</button>
-        <button id="zoom-fit">◱</button>
-      </div>
-    </div>
-  </main>
+        <div class="row full" style="margin-top:6px;">
+          <button id="clear-canvas" class="btn small">Clear canvas</button>
+        </div>
+      </aside>
+    </section>
+  </div>
 </div>
 
-<input id="upload-input" type="file" accept="image/*" multiple hidden>
+<!-- Fragment picker modal -->
+<div id="picker">
+  <div id="picker-canvas-wrap">
+    <canvas id="picker-canvas"></canvas>
+    <div id="picker-marquee"></div>
+  </div>
+  <div id="picker-toolbar">
+    <span id="picker-hint">Drag a rectangle around the shape you want to keep.</span>
+    <span class="space"></span>
+    <button id="picker-cancel" class="btn">Cancel</button>
+    <button id="picker-save" class="btn primary" disabled>Save fragment</button>
+  </div>
+</div>
+
+<input id="upload-input" type="file" accept="application/json" hidden>
 
 <script>
 (() => {
   'use strict';
 
-  // Default Google Maps API key baked into the site.
-  // Restricted to https://tinydogboots.github.io/* + Maps Static / Street View Static / Geocoding only.
-  // Users can override in the sidebar; their override is stored in localStorage.
   const EMBEDDED_API_KEY = 'AIzaSyDY5uoBE9fI4zwv4GqBtX6wRGCGhVvmAcY';
 
-  // Declared up here (not near render()) because bindSeg triggers scheduleRender during init.
-  let pending = false;
-
-  // ------------------- State -------------------
+  // ---------------- State ----------------
   const state = {
-    // Location
-    query: 'Marrakesh',
-    radius: 2,
-    samples: 8,
-    sources: 'satellite',
-    // Imagery
-    apiKey: '',
-    images: [],       // { img: HTMLImageElement, kind: 'sat'|'sv'|'up', label, primary: bool }
-    // Typography
-    text: 'ATLAS',
-    font: 'Impact',
-    weight: 900,
-    size: 520,
-    tracking: 0,
-    leading: 0.9,
-    // Tiling
-    cols: 60,
-    mode: 'slice',
-    shape: 'square',
-    gap: 1,
-    tilescale: 1,
-    seed: 42,
+    // Fetch
+    query: '',
+    radius: 0.5,
+    samples: 12,
+    sources: 'streetview',
+    fov: 70,
     // Threshold
-    contrast: 800,
+    contrast: 1000,
     brightness: 100,
     grayscale: 1,
     invert: 0,
-    // Canvas
-    aspect: '1:1',
-    resolution: 2160,
-    bg: '#0a0a0a',
-    // Export
-    filename: 'atlas-letters',
+    // Auth
+    apiKey: '',
+    // Library
+    fragments: [],  // {id, dataUrl, w, h, source}
+    // Compose
+    placed: [], // {id, fragmentId, x, y, rot, scale, flipX, flipY}
+    selectedId: null,
+    compBg: '#f5f5f0',
+    compAspect: '4:5',
+    compRes: 2160,
+    grid: 0,
+    gridSize: 60,
+    snap: 0,
+    filename: 'atlas-composition',
     // View
-    zoom: 0, // 0 = fit
+    mode: 'explore',
   };
 
-  // ------------------- Elements -------------------
-  const $ = sel => document.querySelector(sel);
-  const canvas = $('#output');
-  const ctx = canvas.getContext('2d');
-  const scaler = $('#canvas-scaler');
-  const wrap = $('#canvas-wrap');
+  // Transient (not persisted): the actual loaded HTMLImageElements from fetch.
+  const runtime = {
+    fetchedImages: [], // { img, kind, label }
+  };
 
-  // ------------------- Persistence -------------------
-  const STORAGE_KEY = 'atlas-letters-state-v1';
+  const $ = s => document.querySelector(s);
+  const $$ = s => document.querySelectorAll(s);
+  const uid = () => Math.random().toString(36).slice(2,10);
+  const escapeHTML = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+  // ---------------- Persistence ----------------
+  const KEY = 'atlas-letters-v2';
   function saveState() {
-    const { images, ...persist } = state;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(persist));
-    } catch(e) {}
+      localStorage.setItem(KEY, JSON.stringify(state));
+    } catch (e) {
+      // Likely quota exceeded — most often from fragments (base64)
+      setStatus('Library too big to auto-save. Use "Save library to file" to keep it.', 'error');
+    }
   }
   function loadState() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(KEY);
       if (!raw) return;
       Object.assign(state, JSON.parse(raw));
-    } catch(e) {}
+    } catch (e) {}
   }
   loadState();
 
-  // ------------------- Utility -------------------
-  function mulberry32(seed) {
-    let s = seed >>> 0;
-    return function() {
-      s = (s + 0x6D2B79F5) >>> 0;
-      let t = s;
-      t = Math.imul(t ^ (t >>> 15), t | 1);
-      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-  function hashSeed(seed, ...ints) {
-    let h = seed | 0;
-    for (const n of ints) { h = Math.imul(h ^ (n + 0x9e3779b9), 0x85ebca6b); h ^= h >>> 13; }
-    return h >>> 0;
-  }
-
+  // ---------------- Status ----------------
   function setStatus(msg, kind='') {
-    const s = $('#status');
-    s.textContent = msg;
-    s.className = kind;
+    const el = $('#status');
+    el.textContent = msg;
+    el.className = kind;
   }
 
-  // ------------------- Bindings -------------------
-  function bindText(id, key, parse = x => x) {
+  // ---------------- Bindings ----------------
+  function bindText(id, key) {
     const el = $('#' + id);
-    el.value = state[key];
-    el.addEventListener('input', () => {
-      state[key] = parse(el.value);
-      saveState();
-      scheduleRender();
-    });
+    if (state[key] !== undefined) el.value = state[key];
+    el.addEventListener('input', () => { state[key] = el.value; saveState(); });
     return el;
   }
-  function bindSlider(id, key, parse = parseFloat, fmt = v => v) {
-    const el = $('#' + id);
-    const val = $('#' + id + '-val');
+  function bindSlider(id, key, parseFn = parseFloat, fmt = v => v) {
+    const el = $('#' + id), val = $('#' + id + '-val');
     el.value = state[key];
     val.textContent = fmt(state[key]);
     el.addEventListener('input', () => {
-      state[key] = parse(el.value);
+      state[key] = parseFn(el.value);
       val.textContent = fmt(state[key]);
       saveState();
-      scheduleRender();
+      onStateChange(key);
     });
     return el;
   }
   function bindSeg(id, key) {
     const seg = $('#' + id);
     const buttons = seg.querySelectorAll('button');
-    const set = v => {
-      state[key] = isNaN(+v) ? v : +v;
+    const sync = v => {
       buttons.forEach(b => b.classList.toggle('active', b.dataset.v === String(v)));
-      saveState();
-      scheduleRender();
     };
-    buttons.forEach(b => b.addEventListener('click', () => set(b.dataset.v)));
-    set(state[key]);
-    return { set };
+    buttons.forEach(b => b.addEventListener('click', () => {
+      const v = b.dataset.v;
+      state[key] = isNaN(+v) ? v : +v;
+      sync(v);
+      saveState();
+      onStateChange(key);
+    }));
+    sync(state[key]);
   }
-  function bindSelect(id, key, parse = x => x) {
+  function bindSelect(id, key, parseFn = x => x) {
     const el = $('#' + id);
     el.value = state[key];
     el.addEventListener('change', () => {
-      state[key] = parse(el.value);
-      if (key === 'aspect' || key === 'resolution') resizeCanvas();
+      state[key] = parseFn(el.value);
       saveState();
-      scheduleRender();
+      onStateChange(key);
     });
-    return el;
   }
   function bindColor(id, key) {
     const el = $('#' + id);
@@ -686,331 +708,78 @@
     el.addEventListener('input', () => {
       state[key] = el.value;
       saveState();
-      scheduleRender();
+      onStateChange(key);
     });
-    return el;
+  }
+
+  function onStateChange(key) {
+    // Threshold changes → re-apply filter to explore-mode images and repaint any picker canvas
+    if (['contrast','brightness','grayscale','invert'].includes(key)) {
+      applyThresholdToImagesGrid();
+      if (currentPicker) currentPicker.repaint();
+    }
+    if (['compBg','compAspect','compRes','grid','gridSize','snap'].includes(key)) {
+      resizeCompCanvas();
+      renderComp();
+    }
   }
 
   bindText('query', 'query');
-  bindText('text', 'text');
-  bindText('font', 'font');
-  bindText('filename', 'filename');
   bindText('apikey', 'apiKey');
+  bindText('filename', 'filename');
 
-  bindSlider('radius', 'radius', parseFloat, v => (+v).toFixed(1));
+  bindSlider('radius', 'radius', parseFloat, v => (+v).toFixed(2));
   bindSlider('samples', 'samples', v => parseInt(v,10));
-  bindSlider('weight', 'weight', v => parseInt(v,10));
-  bindSlider('size', 'size', v => parseInt(v,10));
-  bindSlider('tracking', 'tracking', v => parseInt(v,10));
-  bindSlider('leading', 'leading', parseFloat, v => (+v).toFixed(2));
-  bindSlider('cols', 'cols', v => parseInt(v,10));
-  bindSlider('gap', 'gap', parseFloat, v => (+v).toFixed(1));
-  bindSlider('tilescale', 'tilescale', parseFloat, v => (+v).toFixed(2));
-  bindSlider('seed', 'seed', v => parseInt(v,10));
+  bindSlider('fov', 'fov', v => parseInt(v,10));
   bindSlider('contrast', 'contrast', v => parseInt(v,10));
   bindSlider('brightness', 'brightness', v => parseInt(v,10));
   bindSlider('grayscale', 'grayscale', parseFloat, v => (+v).toFixed(2));
+  bindSlider('grid-size', 'gridSize', v => parseInt(v,10));
 
   bindSeg('sources-seg', 'sources');
-  bindSeg('mode-seg', 'mode');
-  bindSeg('shape-seg', 'shape');
   bindSeg('invert-seg', 'invert');
+  bindSeg('grid-seg', 'grid');
+  bindSeg('snap-seg', 'snap');
 
-  bindSelect('aspect', 'aspect');
-  bindSelect('resolution', 'resolution', v => parseInt(v,10));
-  bindColor('bg', 'bg');
+  bindSelect('comp-aspect', 'compAspect');
+  bindSelect('comp-res', 'compRes', v => parseInt(v,10));
+  bindColor('comp-bg', 'compBg');
 
-  // ------------------- Canvas size -------------------
-  function aspectRatio() {
-    if (state.aspect === 'A4') return [210, 297];
-    const [w, h] = state.aspect.split(':').map(Number);
-    return [w, h];
+  // ---------------- Threshold filter ----------------
+  function currentFilter() {
+    let f = '';
+    if (state.grayscale > 0) f += `grayscale(${state.grayscale}) `;
+    f += `brightness(${state.brightness}%) contrast(${state.contrast}%)`;
+    if (state.invert) f += ' invert(1)';
+    return f;
   }
-  function resizeCanvas() {
-    const [aw, ah] = aspectRatio();
-    const long = state.resolution;
-    let w, h;
-    if (aw >= ah) { w = long; h = Math.round(long * ah / aw); }
-    else { h = long; w = Math.round(long * aw / ah); }
-    canvas.width = w;
-    canvas.height = h;
-    fitCanvasToStage();
-    $('#dimensions').textContent = `${w} × ${h}`;
+  function applyThresholdToImagesGrid() {
+    const f = currentFilter();
+    $$('#images-grid .street-card img').forEach(im => { im.style.filter = f; });
   }
 
-  function fitCanvasToStage() {
-    const bounds = wrap.getBoundingClientRect();
-    const pad = 40;
-    const availW = bounds.width - pad;
-    const availH = bounds.height - pad;
-    const fit = Math.min(availW / canvas.width, availH / canvas.height);
-    let scale = state.zoom === 0 ? fit : state.zoom;
-    scaler.style.width = canvas.width + 'px';
-    scaler.style.height = canvas.height + 'px';
-    scaler.style.transform = `scale(${scale})`;
-    scaler.style.transformOrigin = 'center';
-    $('#zoom-val').textContent = state.zoom === 0 ? `Fit ${Math.round(fit*100)}%` : Math.round(scale*100) + '%';
-  }
-  window.addEventListener('resize', fitCanvasToStage);
-
-  $('#zoom-in').addEventListener('click', () => {
-    const bounds = wrap.getBoundingClientRect();
-    const fit = Math.min((bounds.width-40) / canvas.width, (bounds.height-40) / canvas.height);
-    const cur = state.zoom === 0 ? fit : state.zoom;
-    state.zoom = Math.min(cur * 1.25, 8);
-    fitCanvasToStage();
-  });
-  $('#zoom-out').addEventListener('click', () => {
-    const bounds = wrap.getBoundingClientRect();
-    const fit = Math.min((bounds.width-40) / canvas.width, (bounds.height-40) / canvas.height);
-    const cur = state.zoom === 0 ? fit : state.zoom;
-    state.zoom = Math.max(cur * 0.8, 0.05);
-    fitCanvasToStage();
-  });
-  $('#zoom-fit').addEventListener('click', () => { state.zoom = 0; fitCanvasToStage(); });
-
-  // ------------------- Reshuffle / Fit type -------------------
-  $('#reshuffle-btn').addEventListener('click', () => {
-    state.seed = Math.floor(Math.random() * 10000);
-    $('#seed').value = state.seed;
-    $('#seed-val').textContent = state.seed;
-    scheduleRender();
-  });
-
-  $('#fit-btn').addEventListener('click', () => {
-    // Iteratively fit font size so widest line fits ~92% of canvas width
-    const target = canvas.width * 0.92;
-    const lines = state.text.split('\n').filter(l => l.length);
-    if (!lines.length) return;
-    let size = state.size;
-    for (let i = 0; i < 20; i++) {
-      ctx.font = `${state.weight} ${size}px ${cssFont(state.font)}`;
-      const maxW = Math.max(...lines.map(l => measureLineWidth(l, size)));
-      if (maxW === 0) break;
-      const ratio = target / maxW;
-      size = Math.max(20, Math.min(2000, size * ratio));
-      if (Math.abs(ratio - 1) < 0.01) break;
-    }
-    state.size = Math.round(size);
-    $('#size').value = state.size;
-    $('#size-val').textContent = state.size;
-    scheduleRender();
-  });
-
-  function cssFont(name) {
-    // Wrap in quotes if it has spaces
-    return /\s/.test(name) ? `"${name}"` : name;
-  }
-  function measureLineWidth(line, size) {
-    ctx.font = `${state.weight} ${size}px ${cssFont(state.font)}`;
-    const widths = [...line].map(ch => ctx.measureText(ch).width);
-    return widths.reduce((a,b)=>a+b, 0) + state.tracking * Math.max(0, line.length - 1);
-  }
-
-  // ------------------- Preview / Fullscreen ------------
-  $('#preview-tab').addEventListener('click', () => {
-    document.body.classList.toggle('preview-mode');
-    if (document.body.classList.contains('preview-mode')) {
-      $('#sidebar').style.display = 'none';
-      $('#preview-tab').classList.add('active');
-      document.querySelector('#stage-top .tab').classList.remove('active');
-    } else {
-      $('#sidebar').style.display = '';
-      $('#preview-tab').classList.remove('active');
-      document.querySelector('#stage-top .tab').classList.add('active');
-    }
-    fitCanvasToStage();
-  });
-
-  // ------------------- Image loading -------------------
-  function loadImage(src, label='') {
-    return new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve({ img, label });
-      img.onerror = () => reject(new Error('load fail: ' + label));
-      img.src = src;
-    });
-  }
-
-  function addImage(entry) {
-    state.images.push(entry);
-    if (!state.images.some(x => x.primary)) entry.primary = true;
-    renderThumbs();
-    scheduleRender();
-  }
-
-  function renderThumbs() {
-    const container = $('#thumbs');
-    container.innerHTML = '';
-    state.images.forEach((entry, i) => {
-      const t = document.createElement('div');
-      t.className = 'thumb' + (entry.primary ? ' primary' : '');
-      t.title = entry.label;
-      const im = document.createElement('img');
-      im.src = entry.img.src;
-      t.appendChild(im);
-      const b = document.createElement('div');
-      b.className = 'badge';
-      b.textContent = entry.kind || '';
-      t.appendChild(b);
-      const rm = document.createElement('div');
-      rm.className = 'remove';
-      rm.textContent = '×';
-      rm.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const wasPrimary = entry.primary;
-        state.images.splice(i, 1);
-        if (wasPrimary && state.images.length) state.images[0].primary = true;
-        renderThumbs();
-        scheduleRender();
-      });
-      t.appendChild(rm);
-      t.addEventListener('click', () => {
-        state.images.forEach(x => x.primary = false);
-        entry.primary = true;
-        renderThumbs();
-        scheduleRender();
-      });
-      container.appendChild(t);
-    });
-  }
-
-  // ------------------- Google APIs -------------------
-  async function geocode(query, key) {
-    // Detect "lat,lng"
-    const m = query.trim().match(/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/);
-    if (m) return { lat: +m[1], lng: +m[3] };
-    // Use Places API (New) Text Search — works with website-restricted keys.
-    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Goog-Api-Key': key,
-        'X-Goog-FieldMask': 'places.location,places.displayName',
-      },
-      body: JSON.stringify({ textQuery: query }),
-    });
-    const data = await res.json();
-    if (data.error) throw new Error(data.error.message || 'search failed');
-    if (!data.places || !data.places.length) throw new Error('No results for "' + query + '"');
-    const loc = data.places[0].location;
-    return { lat: loc.latitude, lng: loc.longitude };
-  }
-
-  function sampleInRadius(center, radiusKm, n, seed) {
-    const rand = mulberry32(seed);
-    const pts = [];
-    for (let i = 0; i < n; i++) {
-      const angle = rand() * Math.PI * 2;
-      const r = Math.sqrt(rand()) * radiusKm;
-      const dLat = r / 111;
-      const dLng = r / (111 * Math.cos(center.lat * Math.PI / 180));
-      pts.push({
-        lat: center.lat + dLat * Math.cos(angle),
-        lng: center.lng + dLng * Math.sin(angle),
-      });
-    }
-    return pts;
-  }
-
-  function satelliteUrl(lat, lng, key, zoom, size = '640x640') {
-    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=${size}&scale=2&maptype=satellite&key=${encodeURIComponent(key)}`;
-  }
-
-  function streetViewUrl(lat, lng, key, heading, size = '640x640') {
-    return `https://maps.googleapis.com/maps/api/streetview?size=${size}&location=${lat},${lng}&fov=90&heading=${heading}&pitch=0&source=outdoor&key=${encodeURIComponent(key)}`;
-  }
-
-  async function streetViewExists(lat, lng, key) {
-    const url = `https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&source=outdoor&key=${encodeURIComponent(key)}`;
-    try {
-      const res = await fetch(url);
-      const data = await res.json();
-      return data.status === 'OK';
-    } catch (e) { return false; }
-  }
-
-  async function fetchImagery() {
-    const key = state.apiKey || EMBEDDED_API_KEY;
-    if (!key) {
-      setStatus('Add a Google Maps API key first.', 'error');
-      return;
-    }
-    if (!state.query) {
-      setStatus('Enter a place.', 'error');
-      return;
-    }
-    setStatus('Geocoding ' + state.query + '…', 'loading');
-    let center;
-    try { center = await geocode(state.query, key); }
-    catch (e) { return setStatus('Geocode failed: ' + e.message, 'error'); }
-
-    const rand = mulberry32(state.seed || 1);
-    const points = sampleInRadius(center, state.radius, state.samples, state.seed || 1);
-    const jobs = [];
-    for (const pt of points) {
-      if (state.sources === 'satellite' || state.sources === 'both') {
-        const zoom = 17 + Math.floor(rand() * 3); // 17-19
-        jobs.push({ url: satelliteUrl(pt.lat, pt.lng, key, zoom), kind: 'sat', label: `sat ${pt.lat.toFixed(4)},${pt.lng.toFixed(4)}` });
-      }
-      if (state.sources === 'streetview' || state.sources === 'both') {
-        const heading = Math.floor(rand() * 360);
-        jobs.push({ url: streetViewUrl(pt.lat, pt.lng, key, heading), kind: 'sv', label: `sv ${pt.lat.toFixed(4)},${pt.lng.toFixed(4)} h${heading}`, needsCheck: true, pt });
-      }
-    }
-    setStatus(`Fetching ${jobs.length} images…`, 'loading');
-
-    // For Street View, skip locations without coverage
-    const filtered = [];
-    for (const job of jobs) {
-      if (job.needsCheck) {
-        const ok = await streetViewExists(job.pt.lat, job.pt.lng, key);
-        if (ok) filtered.push(job);
-      } else {
-        filtered.push(job);
-      }
-    }
-
-    let done = 0;
-    const results = await Promise.allSettled(filtered.map(async job => {
-      const r = await loadImage(job.url, job.label);
-      done++;
-      setStatus(`Fetching ${done}/${filtered.length}…`, 'loading');
-      return { ...r, kind: job.kind };
-    }));
-
-    // Replace fetched imagery pool (keep any uploads)
-    const uploaded = state.images.filter(x => x.kind === 'up');
-    state.images = uploaded;
-    for (const r of results) {
-      if (r.status === 'fulfilled') addImage(r.value);
-    }
-    if (!state.images.length) {
-      setStatus('No usable imagery came back. Try a bigger radius or a different place.', 'error');
-    } else {
-      setStatus(`Loaded ${state.images.length} images from ${state.query}.`, 'ok');
+  // ---------------- Mode switching ----------------
+  $$('.modeswitch button').forEach(b => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  function setMode(mode) {
+    state.mode = mode;
+    saveState();
+    $$('.modeswitch button').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+    $$('.mode').forEach(m => m.classList.toggle('active', m.id === mode));
+    if (mode === 'compose') {
+      resizeCompCanvas();
+      renderComp();
     }
   }
+  setMode(state.mode || 'explore');
 
-  $('#fetch-btn').addEventListener('click', fetchImagery);
-
-  // -------------- Places autocomplete --------------
+  // ---------------- Places autocomplete ----------------
   const acList = $('#ac-list');
   const queryEl = $('#query');
-  let acItems = [];
-  let acActive = -1;
-  let acDebounce = null;
-  let acReq = 0;
+  let acItems = [], acActive = -1, acDebounce = null, acReq = 0;
 
-  function escapeHTML(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-  function hideAC() { acList.classList.remove('open'); acActive = -1; }
   function renderAC(items) {
-    acItems = items;
-    acActive = -1;
-    if (!items.length) { hideAC(); return; }
+    acItems = items; acActive = -1;
+    if (!items.length) { acList.classList.remove('open'); return; }
     acList.innerHTML = items.map(it => `
       <div class="ac-item">
         <div class="main">${escapeHTML(it.main)}</div>
@@ -1018,7 +787,7 @@
       </div>
     `).join('');
     [...acList.children].forEach((el, i) => {
-      el.addEventListener('mousedown', (e) => { e.preventDefault(); pickAC(i); });
+      el.addEventListener('mousedown', e => { e.preventDefault(); pickAC(i); });
       el.addEventListener('mouseenter', () => { acActive = i; refreshACActive(); });
     });
     acList.classList.add('open');
@@ -1032,48 +801,36 @@
     queryEl.value = item.full;
     state.query = item.full;
     saveState();
-    hideAC();
+    acList.classList.remove('open');
     fetchImagery();
   }
-
   async function fetchSuggestions(input) {
     const trimmed = input.trim();
-    if (trimmed.length < 2 || /^-?\d+(\.\d+)?\s*,/.test(trimmed)) { hideAC(); return; }
+    if (trimmed.length < 2 || /^-?\d+(\.\d+)?\s*,/.test(trimmed)) { acList.classList.remove('open'); return; }
     const key = state.apiKey || EMBEDDED_API_KEY;
     if (!key) return;
     const rid = ++acReq;
     try {
       const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Goog-Api-Key': key,
-        },
-        body: JSON.stringify({
-          input: trimmed,
-          includedPrimaryTypes: ['locality','administrative_area_level_1','administrative_area_level_2','administrative_area_level_3','country','neighborhood','sublocality'],
-        }),
+        method:'POST',
+        headers:{ 'Content-Type':'application/json', 'X-Goog-Api-Key':key },
+        body: JSON.stringify({ input: trimmed }),
       });
-      if (rid !== acReq) return; // stale
+      if (rid !== acReq) return;
       const data = await res.json();
-      if (!data.suggestions) { hideAC(); return; }
-      const items = data.suggestions
-        .map(s => {
-          const p = s.placePrediction || {};
-          const sf = p.structuredFormat || {};
-          return {
-            main: sf.mainText?.text || p.text?.text || '',
-            secondary: sf.secondaryText?.text || '',
-            full: p.text?.text || '',
-          };
-        })
-        .filter(x => x.full);
+      if (!data.suggestions) { acList.classList.remove('open'); return; }
+      const items = data.suggestions.map(s => {
+        const p = s.placePrediction || {};
+        const sf = p.structuredFormat || {};
+        return {
+          main: sf.mainText?.text || p.text?.text || '',
+          secondary: sf.secondaryText?.text || '',
+          full: p.text?.text || '',
+        };
+      }).filter(x => x.full);
       renderAC(items);
-    } catch (e) {
-      // silent — autocomplete is progressive enhancement
-    }
+    } catch (e) {}
   }
-
   queryEl.addEventListener('input', () => {
     clearTimeout(acDebounce);
     acDebounce = setTimeout(() => fetchSuggestions(queryEl.value), 220);
@@ -1089,237 +846,651 @@
     }
     if (e.key === 'Enter') {
       if (open && acActive >= 0) { e.preventDefault(); pickAC(acActive); return; }
-      e.preventDefault(); hideAC(); fetchImagery();
+      e.preventDefault(); acList.classList.remove('open'); fetchImagery();
       return;
     }
-    if (e.key === 'Escape') { hideAC(); }
+    if (e.key === 'Escape') acList.classList.remove('open');
   });
-  queryEl.addEventListener('blur', () => setTimeout(hideAC, 180));
-  queryEl.addEventListener('focus', () => { if (queryEl.value.length >= 2) fetchSuggestions(queryEl.value); });
+  queryEl.addEventListener('blur', () => setTimeout(() => acList.classList.remove('open'), 180));
 
-  // ------------------- Upload -------------------
-  $('#upload-btn').addEventListener('click', () => $('#upload-input').click());
-  $('#upload-input').addEventListener('change', e => {
-    handleFiles(e.target.files);
-    e.target.value = '';
-  });
-  $('#clear-btn').addEventListener('click', () => {
-    state.images = [];
-    renderThumbs();
-    scheduleRender();
-  });
-
-  function handleFiles(files) {
-    for (const file of files) {
-      if (!file.type.startsWith('image/')) continue;
-      const reader = new FileReader();
-      reader.onload = () => {
-        loadImage(reader.result, file.name).then(entry => addImage({ ...entry, kind: 'up' }));
-      };
-      reader.readAsDataURL(file);
-    }
+  // ---------------- Geocode & imagery ----------------
+  function mulberry32(seed) {
+    let s = seed >>> 0;
+    return function() {
+      s = (s + 0x6D2B79F5) >>> 0;
+      let t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
   }
 
-  // Drag and drop
-  const dz = $('#dropzone');
-  ['dragenter','dragover'].forEach(ev => wrap.addEventListener(ev, e => {
-    e.preventDefault();
-    if (e.dataTransfer.types.includes('Files')) dz.classList.add('active');
-  }));
-  ['dragleave','drop'].forEach(ev => wrap.addEventListener(ev, e => {
-    e.preventDefault();
-    dz.classList.remove('active');
-  }));
-  wrap.addEventListener('drop', e => {
-    e.preventDefault();
-    dz.classList.remove('active');
-    if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
+  async function geocode(query, key) {
+    const m = query.trim().match(/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/);
+    if (m) return { lat:+m[1], lng:+m[3] };
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'X-Goog-Api-Key':key, 'X-Goog-FieldMask':'places.location' },
+      body: JSON.stringify({ textQuery: query }),
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    if (!data.places || !data.places.length) throw new Error('No results for "' + query + '"');
+    const loc = data.places[0].location;
+    return { lat: loc.latitude, lng: loc.longitude };
+  }
+
+  function sampleInRadius(center, radiusKm, n, seed) {
+    const r = mulberry32(seed);
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const angle = r() * Math.PI * 2;
+      const dist = Math.sqrt(r()) * radiusKm;
+      const dLat = dist / 111;
+      const dLng = dist / (111 * Math.cos(center.lat * Math.PI / 180));
+      pts.push({ lat: center.lat + dLat * Math.cos(angle), lng: center.lng + dLng * Math.sin(angle) });
+    }
+    return pts;
+  }
+
+  function satelliteUrl(lat, lng, key, zoom) {
+    return `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${zoom}&size=640x640&scale=2&maptype=satellite&key=${encodeURIComponent(key)}`;
+  }
+  function streetViewUrl(lat, lng, key, heading) {
+    return `https://maps.googleapis.com/maps/api/streetview?size=640x640&location=${lat},${lng}&fov=${state.fov}&heading=${heading}&pitch=6&source=outdoor&key=${encodeURIComponent(key)}`;
+  }
+  async function streetViewExists(lat, lng, key) {
+    try {
+      const res = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&source=outdoor&key=${encodeURIComponent(key)}`);
+      const data = await res.json();
+      return data.status === 'OK';
+    } catch (e) { return false; }
+  }
+
+  function loadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('load fail'));
+      img.src = src;
+    });
+  }
+
+  async function fetchImagery() {
+    const key = state.apiKey || EMBEDDED_API_KEY;
+    if (!key) return setStatus('Add a Google Maps API key.', 'error');
+    if (!state.query.trim()) return setStatus('Type an address first.', 'error');
+    setMode('explore');
+
+    setStatus('Locating ' + state.query + '…', 'loading');
+    let center;
+    try { center = await geocode(state.query, key); }
+    catch (e) { return setStatus('Location failed: ' + e.message, 'error'); }
+
+    const seed = Math.floor(Math.random() * 100000);
+    const rand = mulberry32(seed);
+    const points = sampleInRadius(center, state.radius, state.samples, seed);
+    const jobs = [];
+    for (const pt of points) {
+      if (state.sources === 'satellite' || state.sources === 'both') {
+        const zoom = 18 + Math.floor(rand() * 2);
+        jobs.push({ url: satelliteUrl(pt.lat, pt.lng, key, zoom), kind:'sat', pt });
+      }
+      if (state.sources === 'streetview' || state.sources === 'both') {
+        const heading = Math.floor(rand() * 360);
+        jobs.push({ url: streetViewUrl(pt.lat, pt.lng, key, heading), kind:'sv', needsCheck:true, heading, pt });
+      }
+    }
+
+    setStatus(`Checking coverage on ${jobs.length}…`, 'loading');
+    const filtered = [];
+    for (const j of jobs) {
+      if (j.needsCheck) {
+        if (await streetViewExists(j.pt.lat, j.pt.lng, key)) filtered.push(j);
+      } else filtered.push(j);
+    }
+    if (!filtered.length) return setStatus('No imagery available — try a bigger radius.', 'error');
+
+    let done = 0;
+    setStatus(`Fetching 0/${filtered.length}…`, 'loading');
+    const results = await Promise.allSettled(filtered.map(async j => {
+      const img = await loadImage(j.url);
+      done++;
+      setStatus(`Fetching ${done}/${filtered.length}…`, 'loading');
+      return { img, kind:j.kind, pt:j.pt, heading:j.heading };
+    }));
+    runtime.fetchedImages = results.filter(r => r.status === 'fulfilled').map(r => r.value);
+    if (!runtime.fetchedImages.length) return setStatus('All image loads failed. Check API key restrictions.', 'error');
+    renderImagesGrid();
+    setStatus(`Loaded ${runtime.fetchedImages.length} from ${state.query}. Click any to snip fragments.`, 'ok');
+  }
+  $('#fetch-btn').addEventListener('click', fetchImagery);
+
+  function renderImagesGrid() {
+    const grid = $('#images-grid');
+    if (!runtime.fetchedImages.length) {
+      grid.innerHTML = `<div class="placeholder">Type an address up top, hit Fetch, and images will appear here.<br><span class="tag">Click any image to snip a fragment</span></div>`;
+      return;
+    }
+    grid.innerHTML = '';
+    const f = currentFilter();
+    runtime.fetchedImages.forEach((entry, i) => {
+      const card = document.createElement('div');
+      card.className = 'street-card';
+      const im = document.createElement('img');
+      im.src = entry.img.src;
+      im.style.filter = f;
+      im.alt = '';
+      card.appendChild(im);
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const kindLabel = entry.kind === 'sv' ? 'street view' : 'satellite';
+      meta.innerHTML = `<span class="kind">${kindLabel}</span><span>${entry.pt.lat.toFixed(4)}, ${entry.pt.lng.toFixed(4)}</span>`;
+      card.appendChild(meta);
+      card.addEventListener('click', () => openPicker(entry));
+      grid.appendChild(card);
+    });
+  }
+
+  // ---------------- Picker modal ----------------
+  let currentPicker = null;
+  function openPicker(entry) {
+    const modal = $('#picker');
+    const canvas = $('#picker-canvas');
+    const wrap = $('#picker-canvas-wrap');
+    const marquee = $('#picker-marquee');
+    const saveBtn = $('#picker-save');
+    modal.classList.add('open');
+
+    const img = entry.img;
+    // Fit inside the modal area
+    const maxW = window.innerWidth - 200;
+    const maxH = window.innerHeight - 240;
+    const scale = Math.min(maxW / img.naturalWidth, maxH / img.naturalHeight, 1);
+    const displayW = Math.round(img.naturalWidth * scale);
+    const displayH = Math.round(img.naturalHeight * scale);
+    canvas.width = displayW;
+    canvas.height = displayH;
+
+    const ctx = canvas.getContext('2d');
+    function repaint() {
+      ctx.clearRect(0, 0, displayW, displayH);
+      ctx.filter = currentFilter();
+      ctx.drawImage(img, 0, 0, displayW, displayH);
+      ctx.filter = 'none';
+    }
+    repaint();
+
+    // Marquee state
+    let dragStart = null, box = null;
+    marquee.style.display = 'none';
+    saveBtn.disabled = true;
+
+    function onDown(e) {
+      const r = wrap.getBoundingClientRect();
+      dragStart = { x: e.clientX - r.left, y: e.clientY - r.top };
+      box = { x: dragStart.x, y: dragStart.y, w: 0, h: 0 };
+      updateMarquee();
+    }
+    function onMove(e) {
+      if (!dragStart) return;
+      const r = wrap.getBoundingClientRect();
+      const x = Math.max(0, Math.min(displayW, e.clientX - r.left));
+      const y = Math.max(0, Math.min(displayH, e.clientY - r.top));
+      box = {
+        x: Math.min(dragStart.x, x),
+        y: Math.min(dragStart.y, y),
+        w: Math.abs(x - dragStart.x),
+        h: Math.abs(y - dragStart.y),
+      };
+      updateMarquee();
+    }
+    function onUp() {
+      dragStart = null;
+      if (box && box.w > 8 && box.h > 8) saveBtn.disabled = false;
+    }
+    function updateMarquee() {
+      if (!box || box.w < 2 || box.h < 2) { marquee.style.display = 'none'; return; }
+      marquee.style.display = 'block';
+      marquee.style.left = box.x + 'px';
+      marquee.style.top = box.y + 'px';
+      marquee.style.width = box.w + 'px';
+      marquee.style.height = box.h + 'px';
+    }
+
+    wrap.addEventListener('mousedown', onDown);
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onUp);
+
+    function cleanup() {
+      wrap.removeEventListener('mousedown', onDown);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onUp);
+      modal.classList.remove('open');
+      currentPicker = null;
+    }
+
+    function saveFragment() {
+      if (!box || box.w < 8 || box.h < 8) return;
+      // Crop from the ORIGINAL image at native res, applying threshold
+      const scaleBackX = img.naturalWidth / displayW;
+      const scaleBackY = img.naturalHeight / displayH;
+      const sx = Math.round(box.x * scaleBackX);
+      const sy = Math.round(box.y * scaleBackY);
+      const sw = Math.round(box.w * scaleBackX);
+      const sh = Math.round(box.h * scaleBackY);
+
+      // Clamp fragment output size to keep localStorage sane.
+      const maxDim = 480;
+      const outScale = Math.min(1, maxDim / Math.max(sw, sh));
+      const outW = Math.max(1, Math.round(sw * outScale));
+      const outH = Math.max(1, Math.round(sh * outScale));
+
+      const off = document.createElement('canvas');
+      off.width = outW; off.height = outH;
+      const octx = off.getContext('2d');
+      octx.fillStyle = '#fff';
+      octx.fillRect(0, 0, outW, outH);
+      octx.filter = currentFilter();
+      octx.drawImage(img, sx, sy, sw, sh, 0, 0, outW, outH);
+      octx.filter = 'none';
+
+      let dataUrl;
+      try { dataUrl = off.toDataURL('image/png'); }
+      catch (err) { setStatus('Could not save — image blocked by CORS.', 'error'); return; }
+
+      state.fragments.push({
+        id: uid(),
+        dataUrl,
+        w: outW, h: outH,
+        source: { lat: entry.pt.lat, lng: entry.pt.lng, kind: entry.kind },
+      });
+      saveState();
+      renderFragmentLists();
+      setStatus(`Fragment saved (${state.fragments.length} total).`, 'ok');
+      cleanup();
+    }
+
+    saveBtn.onclick = saveFragment;
+    $('#picker-cancel').onclick = cleanup;
+
+    currentPicker = { repaint, cleanup };
+    document.addEventListener('keydown', function esc(e){
+      if (e.key === 'Escape') { cleanup(); document.removeEventListener('keydown', esc); }
+    });
+  }
+
+  // ---------------- Fragments library ----------------
+  function renderFragmentLists() {
+    $('#frag-count-explore').textContent = state.fragments.length;
+    $('#frag-count-compose').textContent = state.fragments.length;
+
+    // Explore panel: delete-only, not draggable
+    const ex = $('#fragments-explore');
+    ex.innerHTML = '';
+    state.fragments.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'frag';
+      el.innerHTML = `<img src="${f.dataUrl}" alt=""><div class="del" data-id="${f.id}">×</div>`;
+      ex.appendChild(el);
+    });
+    ex.querySelectorAll('.del').forEach(d => {
+      d.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = d.dataset.id;
+        state.fragments = state.fragments.filter(f => f.id !== id);
+        // Also remove any placed instances of it
+        state.placed = state.placed.filter(p => p.fragmentId !== id);
+        if (state.selectedId && !state.placed.find(p => p.id === state.selectedId)) {
+          state.selectedId = null;
+          updateSelPanel();
+        }
+        saveState();
+        renderFragmentLists();
+        renderComp();
+      });
+    });
+
+    // Compose panel: draggable
+    const co = $('#fragments-compose');
+    co.innerHTML = '';
+    state.fragments.forEach(f => {
+      const el = document.createElement('div');
+      el.className = 'frag';
+      el.draggable = true;
+      el.dataset.id = f.id;
+      el.innerHTML = `<img src="${f.dataUrl}" alt="">`;
+      el.addEventListener('dragstart', e => {
+        e.dataTransfer.setData('text/plain', f.id);
+        e.dataTransfer.effectAllowed = 'copy';
+        el.classList.add('dragging');
+      });
+      el.addEventListener('dragend', () => el.classList.remove('dragging'));
+      co.appendChild(el);
+    });
+  }
+  renderFragmentLists();
+
+  // Library file save/load/clear
+  $('#export-lib').addEventListener('click', () => {
+    const data = JSON.stringify({ fragments: state.fragments }, null, 2);
+    const blob = new Blob([data], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'atlas-library.json';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
+  $('#import-lib').addEventListener('click', () => $('#upload-input').click());
+  $('#upload-input').addEventListener('change', async e => {
+    const file = e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    try {
+      const txt = await file.text();
+      const parsed = JSON.parse(txt);
+      if (!Array.isArray(parsed.fragments)) throw new Error('bad file');
+      state.fragments = state.fragments.concat(parsed.fragments);
+      saveState();
+      renderFragmentLists();
+      setStatus(`Imported ${parsed.fragments.length} fragments.`, 'ok');
+    } catch (err) { setStatus('Could not read library file.', 'error'); }
+  });
+  $('#clear-lib').addEventListener('click', () => {
+    if (!state.fragments.length) return;
+    if (!confirm('Clear the whole fragments library? This does not affect the canvas or the file backup.')) return;
+    state.fragments = [];
+    saveState();
+    renderFragmentLists();
   });
 
-  // ------------------- Text mask -------------------
-  const maskCanvas = document.createElement('canvas');
-  const maskCtx = maskCanvas.getContext('2d', { willReadFrequently: true });
+  // ---------------- Composition canvas ----------------
+  const comp = $('#comp-canvas');
+  const compCtx = comp.getContext('2d');
+  const compScaler = $('#comp-scaler');
+  const compOverlay = $('#comp-overlay');
+  const compArea = $('#canvas-area');
 
-  function buildTextMask(width, height) {
-    maskCanvas.width = width;
-    maskCanvas.height = height;
-    maskCtx.fillStyle = '#000';
-    maskCtx.fillRect(0, 0, width, height);
-    maskCtx.fillStyle = '#fff';
-    maskCtx.textBaseline = 'middle';
-    maskCtx.textAlign = 'left';
-    const font = `${state.weight} ${state.size}px ${cssFont(state.font)}`;
-    maskCtx.font = font;
+  // Preload fragment images for fast comp rendering
+  const fragImgCache = new Map();
+  function getFragImage(id) {
+    if (fragImgCache.has(id)) return fragImgCache.get(id);
+    const f = state.fragments.find(x => x.id === id);
+    if (!f) return null;
+    const img = new Image();
+    img.src = f.dataUrl;
+    fragImgCache.set(id, img);
+    return img;
+  }
 
-    const lines = state.text.split('\n');
-    const lineH = state.size * state.leading;
-    const totalH = lines.length * lineH;
-    const startY = height / 2 - totalH / 2 + lineH / 2;
+  function aspectDims() {
+    if (state.compAspect === 'A4') return [210, 297];
+    const [w, h] = state.compAspect.split(':').map(Number);
+    return [w, h];
+  }
+  function resizeCompCanvas() {
+    const [aw, ah] = aspectDims();
+    const long = state.compRes;
+    let w, h;
+    if (aw >= ah) { w = long; h = Math.round(long * ah / aw); }
+    else { h = long; w = Math.round(long * aw / ah); }
+    comp.width = w; comp.height = h;
 
-    lines.forEach((line, i) => {
-      const y = startY + i * lineH;
-      const widths = [...line].map(ch => maskCtx.measureText(ch).width);
-      const lineW = widths.reduce((a,b)=>a+b, 0) + state.tracking * Math.max(0, line.length - 1);
-      let x = width / 2 - lineW / 2;
-      for (let k = 0; k < line.length; k++) {
-        maskCtx.fillText(line[k], x, y);
-        x += widths[k] + state.tracking;
+    // Fit scale so canvas fits in area
+    const bounds = compArea.getBoundingClientRect();
+    const pad = 48;
+    const scale = Math.min((bounds.width - pad) / w, (bounds.height - pad) / h);
+    compScaler.style.width = w + 'px';
+    compScaler.style.height = h + 'px';
+    compScaler.style.transform = `scale(${scale})`;
+    compOverlay.style.width = w + 'px';
+    compOverlay.style.height = h + 'px';
+  }
+  window.addEventListener('resize', () => { if (state.mode === 'compose') resizeCompCanvas(); });
+
+  function renderComp() {
+    const W = comp.width, H = comp.height;
+    compCtx.fillStyle = state.compBg;
+    compCtx.fillRect(0, 0, W, H);
+
+    if (state.grid) {
+      compCtx.strokeStyle = 'rgba(0,0,0,0.06)';
+      compCtx.lineWidth = 1;
+      const g = state.gridSize;
+      for (let x = 0; x < W; x += g) {
+        compCtx.beginPath(); compCtx.moveTo(x, 0); compCtx.lineTo(x, H); compCtx.stroke();
+      }
+      for (let y = 0; y < H; y += g) {
+        compCtx.beginPath(); compCtx.moveTo(0, y); compCtx.lineTo(W, y); compCtx.stroke();
+      }
+    }
+
+    state.placed.forEach(p => {
+      const img = getFragImage(p.fragmentId);
+      const f = state.fragments.find(x => x.id === p.fragmentId);
+      if (!img || !f || !img.complete) return;
+      compCtx.save();
+      compCtx.translate(p.x, p.y);
+      compCtx.rotate(p.rot * Math.PI / 180);
+      compCtx.scale(p.scale * (p.flipX ? -1 : 1), p.scale * (p.flipY ? -1 : 1));
+      compCtx.drawImage(img, -f.w/2, -f.h/2, f.w, f.h);
+      compCtx.restore();
+
+      if (p.id === state.selectedId) {
+        // Selection outline (drawn in canvas coords for simplicity)
+        compCtx.save();
+        compCtx.translate(p.x, p.y);
+        compCtx.rotate(p.rot * Math.PI / 180);
+        compCtx.scale(Math.abs(p.scale), Math.abs(p.scale));
+        compCtx.strokeStyle = '#ff5a1f';
+        compCtx.lineWidth = 3 / p.scale;
+        compCtx.setLineDash([12/p.scale, 8/p.scale]);
+        compCtx.strokeRect(-f.w/2, -f.h/2, f.w, f.h);
+        compCtx.restore();
       }
     });
-    return maskCtx.getImageData(0, 0, width, height);
   }
 
-  // ------------------- Render -------------------
-  function scheduleRender() {
-    if (pending) return;
-    pending = true;
-    requestAnimationFrame(() => { pending = false; render(); });
+  // Drag from library onto canvas
+  compOverlay.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'copy'; });
+  compOverlay.addEventListener('drop', e => {
+    e.preventDefault();
+    const id = e.dataTransfer.getData('text/plain');
+    if (!id) return;
+    const f = state.fragments.find(x => x.id === id);
+    if (!f) return;
+    const p = overlayToCanvas(e.clientX, e.clientY);
+    // scale so longest side is ~40% of canvas by default
+    const targetDim = Math.min(comp.width, comp.height) * 0.4;
+    const scale = targetDim / Math.max(f.w, f.h);
+    const placed = {
+      id: uid(),
+      fragmentId: id,
+      x: p.x, y: p.y,
+      rot: 0,
+      scale,
+      flipX: false, flipY: false,
+    };
+    state.placed.push(placed);
+    state.selectedId = placed.id;
+    saveState();
+    renderComp();
+    updateSelPanel();
+  });
+
+  function overlayToCanvas(clientX, clientY) {
+    const r = compOverlay.getBoundingClientRect();
+    const sx = comp.width / r.width;
+    const sy = comp.height / r.height;
+    return { x: (clientX - r.left) * sx, y: (clientY - r.top) * sy };
   }
 
-  function render() {
-    const W = canvas.width, H = canvas.height;
-
-    // Background
-    ctx.filter = 'none';
-    ctx.fillStyle = state.bg;
-    ctx.fillRect(0, 0, W, H);
-
-    if (!state.images.length) {
-      ctx.fillStyle = 'rgba(255,255,255,0.15)';
-      ctx.font = `500 ${Math.round(W * 0.02)}px -apple-system, "SF Pro Text", sans-serif`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('Fetch imagery from a location, or drop images in.', W/2, H/2);
-      $('#tilecount').textContent = '0 tiles';
-      return;
+  // Click to select, drag to move
+  let dragCtx = null;
+  compOverlay.addEventListener('mousedown', e => {
+    if (e.button !== 0) return;
+    const p = overlayToCanvas(e.clientX, e.clientY);
+    const hit = hitTest(p);
+    if (hit) {
+      state.selectedId = hit.id;
+      dragCtx = { id: hit.id, ox: hit.x - p.x, oy: hit.y - p.y };
+      renderComp();
+      updateSelPanel();
+    } else {
+      state.selectedId = null;
+      renderComp();
+      updateSelPanel();
     }
+  });
+  window.addEventListener('mousemove', e => {
+    if (!dragCtx) return;
+    const p = overlayToCanvas(e.clientX, e.clientY);
+    const placed = state.placed.find(x => x.id === dragCtx.id);
+    if (!placed) { dragCtx = null; return; }
+    let nx = p.x + dragCtx.ox, ny = p.y + dragCtx.oy;
+    if (state.snap) {
+      const g = state.gridSize;
+      nx = Math.round(nx / g) * g;
+      ny = Math.round(ny / g) * g;
+    }
+    placed.x = nx; placed.y = ny;
+    renderComp();
+  });
+  window.addEventListener('mouseup', e => {
+    if (dragCtx) { dragCtx = null; saveState(); }
+  });
 
-    // Build text mask at output resolution
-    const mask = buildTextMask(W, H);
-
-    // Grid
-    const cols = Math.max(1, state.cols|0);
-    const tw = W / cols;
-    const rows = Math.max(1, Math.round(H / tw));
-    const th = H / rows;
-    const gap = state.gap * (W / 1080); // scale gap with resolution
-    const tileScale = state.tilescale;
-
-    // Threshold via canvas ctx.filter
-    let filter = '';
-    if (state.grayscale > 0) filter += `grayscale(${state.grayscale}) `;
-    filter += `brightness(${state.brightness}%) contrast(${state.contrast}%)`;
-    if (state.invert) filter += ' invert(1)';
-
-    const rand = mulberry32(state.seed || 1);
-    const images = state.images;
-    const primary = images.find(x => x.primary) || images[0];
-
-    let tileCount = 0;
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        const cx = Math.floor((c + 0.5) * tw);
-        const cy = Math.floor((r + 0.5) * th);
-        const idx = (cy * W + cx) * 4;
-        const lum = mask.data[idx]; // R channel; white = inside letter
-        if (lum < 128) continue;
-
-        let img, sx, sy, sw, sh;
-        if (state.mode === 'slice') {
-          img = primary.img;
-          sw = img.naturalWidth / cols;
-          sh = img.naturalHeight / rows;
-          sx = c * sw;
-          sy = r * sh;
-        } else {
-          const hash = hashSeed(state.seed || 1, c, r);
-          const pick = images[hash % images.length].img;
-          img = pick;
-          const rr = mulberry32(hash);
-          sw = pick.naturalWidth * (0.15 + rr() * 0.35);
-          sh = pick.naturalHeight * (0.15 + rr() * 0.35);
-          sx = rr() * (pick.naturalWidth - sw);
-          sy = rr() * (pick.naturalHeight - sh);
-        }
-
-        let dx = c * tw + gap / 2;
-        let dy = r * th + gap / 2;
-        let dw = tw - gap;
-        let dh = th - gap;
-
-        // tile scale (shrinks/grows tiles about their center)
-        if (tileScale !== 1) {
-          const ccx = dx + dw/2, ccy = dy + dh/2;
-          dw *= tileScale; dh *= tileScale;
-          dx = ccx - dw/2; dy = ccy - dh/2;
-        }
-
-        ctx.save();
-        if (state.shape === 'circle') {
-          ctx.beginPath();
-          ctx.arc(dx + dw/2, dy + dh/2, Math.min(dw, dh)/2, 0, Math.PI*2);
-          ctx.clip();
-        } else if (state.shape === 'diamond') {
-          ctx.beginPath();
-          ctx.moveTo(dx + dw/2, dy);
-          ctx.lineTo(dx + dw, dy + dh/2);
-          ctx.lineTo(dx + dw/2, dy + dh);
-          ctx.lineTo(dx, dy + dh/2);
-          ctx.closePath();
-          ctx.clip();
-        }
-        ctx.filter = filter;
-        try {
-          ctx.drawImage(img, sx, sy, Math.max(1, sw), Math.max(1, sh), dx, dy, dw, dh);
-        } catch (e) { /* ignore individual draw errors */ }
-        ctx.restore();
-        tileCount++;
+  function hitTest(pt) {
+    // Iterate top-most first
+    for (let i = state.placed.length - 1; i >= 0; i--) {
+      const p = state.placed[i];
+      const f = state.fragments.find(x => x.id === p.fragmentId);
+      if (!f) continue;
+      // Transform pt into placed-local coords
+      const dx = pt.x - p.x, dy = pt.y - p.y;
+      const a = -p.rot * Math.PI / 180;
+      const cs = Math.cos(a), sn = Math.sin(a);
+      const lx = (dx * cs - dy * sn) / (Math.abs(p.scale) * (p.flipX ? -1 : 1));
+      const ly = (dx * sn + dy * cs) / (Math.abs(p.scale) * (p.flipY ? -1 : 1));
+      if (Math.abs(lx) <= f.w/2 && Math.abs(ly) <= f.h/2) {
+        return p;
       }
     }
-    ctx.filter = 'none';
-    $('#tilecount').textContent = `${tileCount.toLocaleString()} tiles`;
+    return null;
   }
 
-  // ------------------- Export -------------------
-  $('#export-btn').addEventListener('click', () => {
+  function updateSelPanel() {
+    const p = state.placed.find(x => x.id === state.selectedId);
+    $('#sel-empty').style.display = p ? 'none' : 'block';
+    $('#sel-controls').style.display = p ? 'block' : 'none';
+    if (!p) return;
+    $('#sel-rot').value = p.rot;
+    $('#sel-rot-val').textContent = Math.round(p.rot) + '°';
+    $('#sel-scale').value = p.scale;
+    $('#sel-scale-val').textContent = (+p.scale).toFixed(2);
+  }
+
+  $('#sel-rot').addEventListener('input', e => {
+    const p = state.placed.find(x => x.id === state.selectedId);
+    if (!p) return;
+    p.rot = parseFloat(e.target.value);
+    $('#sel-rot-val').textContent = Math.round(p.rot) + '°';
+    renderComp();
+    saveState();
+  });
+  $('#sel-scale').addEventListener('input', e => {
+    const p = state.placed.find(x => x.id === state.selectedId);
+    if (!p) return;
+    p.scale = parseFloat(e.target.value);
+    $('#sel-scale-val').textContent = p.scale.toFixed(2);
+    renderComp();
+    saveState();
+  });
+  $('#sel-flip-x').addEventListener('click', () => {
+    const p = state.placed.find(x => x.id === state.selectedId);
+    if (!p) return;
+    p.flipX = !p.flipX; renderComp(); saveState();
+  });
+  $('#sel-flip-y').addEventListener('click', () => {
+    const p = state.placed.find(x => x.id === state.selectedId);
+    if (!p) return;
+    p.flipY = !p.flipY; renderComp(); saveState();
+  });
+  $('#sel-delete').addEventListener('click', () => {
+    state.placed = state.placed.filter(p => p.id !== state.selectedId);
+    state.selectedId = null;
+    renderComp(); updateSelPanel(); saveState();
+  });
+  $('#sel-fwd').addEventListener('click', () => {
+    const i = state.placed.findIndex(p => p.id === state.selectedId);
+    if (i < 0 || i === state.placed.length - 1) return;
+    const [p] = state.placed.splice(i, 1);
+    state.placed.splice(i + 1, 0, p);
+    renderComp(); saveState();
+  });
+  $('#sel-back').addEventListener('click', () => {
+    const i = state.placed.findIndex(p => p.id === state.selectedId);
+    if (i <= 0) return;
+    const [p] = state.placed.splice(i, 1);
+    state.placed.splice(i - 1, 0, p);
+    renderComp(); saveState();
+  });
+
+  $('#clear-canvas').addEventListener('click', () => {
+    if (!state.placed.length) return;
+    if (!confirm('Clear the canvas?')) return;
+    state.placed = [];
+    state.selectedId = null;
+    renderComp(); updateSelPanel(); saveState();
+  });
+
+  // Keyboard shortcuts (compose mode)
+  window.addEventListener('keydown', e => {
+    if (state.mode !== 'compose') return;
+    if (['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)) return;
+    const p = state.placed.find(x => x.id === state.selectedId);
+    if (!p) return;
+    if (e.key === 'Backspace' || e.key === 'Delete') { e.preventDefault(); $('#sel-delete').click(); }
+    else if (e.key === 'r' || e.key === 'R') { p.rot = (p.rot + 90) % 360; if (p.rot > 180) p.rot -= 360; updateSelPanel(); renderComp(); saveState(); }
+    else if (e.key === 'f') { p.flipX = !p.flipX; renderComp(); saveState(); }
+    else if (e.key === 'F') { p.flipY = !p.flipY; renderComp(); saveState(); }
+    else if (e.key === '[') { p.scale = Math.max(0.1, p.scale * 0.9); updateSelPanel(); renderComp(); saveState(); }
+    else if (e.key === ']') { p.scale = Math.min(4, p.scale * 1.1); updateSelPanel(); renderComp(); saveState(); }
+    else if (e.key === 'ArrowLeft')  { p.x -= e.shiftKey ? 40 : 4; renderComp(); saveState(); }
+    else if (e.key === 'ArrowRight') { p.x += e.shiftKey ? 40 : 4; renderComp(); saveState(); }
+    else if (e.key === 'ArrowUp')    { p.y -= e.shiftKey ? 40 : 4; renderComp(); saveState(); }
+    else if (e.key === 'ArrowDown')  { p.y += e.shiftKey ? 40 : 4; renderComp(); saveState(); }
+  });
+
+  // ---------------- Export ----------------
+  $('#export-png').addEventListener('click', () => {
+    // Re-render to be safe, without selection outline
+    const wasSelected = state.selectedId;
+    state.selectedId = null;
+    renderComp();
+    state.selectedId = wasSelected;
+
     try {
-      canvas.toBlob(blob => {
-        if (!blob) {
-          setStatus('Export failed. Canvas likely tainted by a CORS-blocked image.', 'error');
-          return;
-        }
-        const url = URL.createObjectURL(blob);
+      comp.toBlob(blob => {
+        if (!blob) { setStatus('Export failed.', 'error'); return; }
         const a = document.createElement('a');
-        a.href = url;
-        a.download = (state.filename || 'atlas-letters') + '.png';
-        document.body.appendChild(a);
+        a.href = URL.createObjectURL(blob);
+        a.download = (state.filename || 'atlas-composition') + '.png';
         a.click();
-        a.remove();
-        URL.revokeObjectURL(url);
+        URL.revokeObjectURL(a.href);
         setStatus('Saved ' + a.download, 'ok');
+        renderComp(); // restore selection outline in view
       }, 'image/png');
-    } catch (e) {
-      setStatus('Export failed: ' + e.message, 'error');
-    }
+    } catch (err) { setStatus('Export failed: ' + err.message, 'error'); }
   });
 
-  // ------------------- Init -------------------
-  resizeCanvas();
-  renderThumbs();
-  scheduleRender();
+  // ---------------- Init ----------------
+  resizeCompCanvas();
+  renderComp();
 
-  // Restore active segment states after loadState
-  ['sources-seg', 'mode-seg', 'shape-seg', 'invert-seg'].forEach(id => {
-    const key = {'sources-seg':'sources','mode-seg':'mode','shape-seg':'shape','invert-seg':'invert'}[id];
-    const cur = String(state[key]);
-    document.querySelectorAll('#' + id + ' button').forEach(b => b.classList.toggle('active', b.dataset.v === cur));
-  });
+  if (state.query) queryEl.value = state.query;
 
-  // Warm intro
-  if (!state.images.length) {
-    const hasKey = state.apiKey || EMBEDDED_API_KEY;
-    setStatus(hasKey ? 'Type a place and hit “Fetch imagery”, or drop images in.' : 'Paste a Google Maps API key or drop images in to start.', '');
-  }
 })();
 </script>
 </body>
