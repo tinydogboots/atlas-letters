@@ -1013,6 +1013,36 @@
     return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
   }
 
+  // Wikimedia Commons search: pulls CC-licensed photos with "brutalist" and the city name.
+  async function searchCommonsBrutalist(cityName, limit = 30) {
+    const queries = [
+      `brutalist architecture ${cityName}`,
+      `brutalism ${cityName}`,
+    ];
+    const seen = new Set();
+    const photos = [];
+    for (const q of queries) {
+      const url = `https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(q)}&srnamespace=6&srlimit=${limit}&format=json&origin=*`;
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+        for (const r of (data.query?.search || [])) {
+          if (seen.has(r.title)) continue;
+          seen.add(r.title);
+          if (!/\.(jpe?g|png)$/i.test(r.title)) continue;
+          // Skip obvious non-photo files
+          if (/\b(plan|map|diagram|logo|coat of arms|drawing|blueprint|sketch)\b/i.test(r.title)) continue;
+          const filename = r.title.replace(/^File:/, '');
+          photos.push({
+            name: filename.replace(/_/g, ' ').replace(/\.[^.]+$/, ''),
+            url: `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(filename)}?width=1024`,
+          });
+        }
+      } catch (e) {}
+    }
+    return photos;
+  }
+
   async function streetViewCoverage(lat, lng, key) {
     try {
       const res = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&source=outdoor&key=${encodeURIComponent(key)}`);
@@ -1033,13 +1063,17 @@
     try { center = await geocode(state.query, key); }
     catch (e) { return setStatus('Location failed: ' + e.message, 'error'); }
 
-    setStatus('Searching for brutalist buildings in ' + state.query + '…', 'loading');
-    let buildings;
-    try { buildings = await findBrutalistBuildings(state.query, center, state.radius, key); }
-    catch (e) { return setStatus('Search failed: ' + e.message, 'error'); }
+    setStatus('Searching for brutalist buildings and CC photos in ' + state.query + '…', 'loading');
+    let buildings, ccPhotos;
+    try {
+      [buildings, ccPhotos] = await Promise.all([
+        findBrutalistBuildings(state.query, center, state.radius, key),
+        searchCommonsBrutalist(state.query),
+      ]);
+    } catch (e) { return setStatus('Search failed: ' + e.message, 'error'); }
 
-    if (!buildings.length) {
-      return setStatus(`No brutalist buildings found for "${state.query}". Try a bigger city.`, 'error');
+    if (!buildings.length && !ccPhotos.length) {
+      return setStatus(`Nothing found for "${state.query}". Try a bigger city.`, 'error');
     }
 
     // Cap number of buildings to state.samples. Each will get 1 Street View shot aimed at it.
@@ -1066,7 +1100,12 @@
         filtered.push({ kind: 'sat', building: b, url: satelliteUrl(b.lat, b.lng, key, 19) });
       }
     }
-    if (!filtered.length) return setStatus('Buildings found but no Street View coverage. Try satellite mode.', 'error');
+    // Add CC-licensed Wikimedia photos on top of Street View results.
+    for (const p of ccPhotos.slice(0, 30)) {
+      filtered.push({ kind: 'cc', building: { name: p.name, lat: 0, lng: 0 }, url: p.url });
+    }
+
+    if (!filtered.length) return setStatus('Nothing to load — try another city.', 'error');
 
     let done = 0;
     setStatus(`Fetching 0/${filtered.length}…`, 'loading');
@@ -1101,7 +1140,7 @@
       card.appendChild(im);
       const meta = document.createElement('div');
       meta.className = 'meta';
-      const kindLabel = entry.kind === 'sv' ? 'street' : 'satellite';
+      const kindLabel = entry.kind === 'sv' ? 'street' : entry.kind === 'cc' ? 'cc photo' : 'satellite';
       meta.innerHTML = `<span class="kind">${kindLabel}</span><span title="${escapeHTML(entry.name || '')}">${escapeHTML(entry.name || '')}</span>`;
       meta.querySelector('span:last-child').style.overflow = 'hidden';
       meta.querySelector('span:last-child').style.textOverflow = 'ellipsis';
