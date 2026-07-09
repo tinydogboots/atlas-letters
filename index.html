@@ -171,6 +171,32 @@
   .hint { color: var(--text-3); font-size: 10.5px; line-height: 1.4; }
   .hint a { color: var(--text-2); text-decoration: underline; }
 
+  /* Autocomplete */
+  .ac-wrap { position: relative; }
+  .ac-list {
+    position: absolute;
+    top: calc(100% + 2px); left: 0; right: 0;
+    background: var(--panel-2);
+    border: 1px solid var(--border-2);
+    border-radius: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 20;
+    display: none;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+  }
+  .ac-list.open { display: block; }
+  .ac-item {
+    padding: 7px 10px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+  }
+  .ac-item:last-child { border-bottom: 0; }
+  .ac-item.active, .ac-item:hover { background: var(--border); }
+  .ac-item .main { color: var(--text); font-size: 11.5px; }
+  .ac-item .sub { color: var(--text-3); font-size: 10px; margin-top: 1px; }
+  .ac-empty { padding: 8px 10px; color: var(--text-3); font-size: 10.5px; }
+
   /* ---------------- Stage ---------------- */
   #stage {
     display: flex; flex-direction: column;
@@ -263,8 +289,9 @@
     <details class="panel" open>
       <summary>Location</summary>
       <div class="panel-body">
-        <div class="row full">
-          <input id="query" type="text" placeholder="e.g. Kyoto — or 35.0116,135.7681" value="Marrakesh">
+        <div class="row full ac-wrap">
+          <input id="query" type="text" placeholder="Start typing a city, or paste lat,lng" value="Marrakesh" autocomplete="off">
+          <div id="ac-list" class="ac-list"></div>
         </div>
         <div class="slider-row">
           <label>Radius km</label>
@@ -955,7 +982,108 @@
   }
 
   $('#fetch-btn').addEventListener('click', fetchImagery);
-  $('#query').addEventListener('keydown', e => { if (e.key === 'Enter') fetchImagery(); });
+
+  // -------------- Places autocomplete --------------
+  const acList = $('#ac-list');
+  const queryEl = $('#query');
+  let acItems = [];
+  let acActive = -1;
+  let acDebounce = null;
+  let acReq = 0;
+
+  function escapeHTML(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function hideAC() { acList.classList.remove('open'); acActive = -1; }
+  function renderAC(items) {
+    acItems = items;
+    acActive = -1;
+    if (!items.length) { hideAC(); return; }
+    acList.innerHTML = items.map(it => `
+      <div class="ac-item">
+        <div class="main">${escapeHTML(it.main)}</div>
+        ${it.secondary ? `<div class="sub">${escapeHTML(it.secondary)}</div>` : ''}
+      </div>
+    `).join('');
+    [...acList.children].forEach((el, i) => {
+      el.addEventListener('mousedown', (e) => { e.preventDefault(); pickAC(i); });
+      el.addEventListener('mouseenter', () => { acActive = i; refreshACActive(); });
+    });
+    acList.classList.add('open');
+  }
+  function refreshACActive() {
+    [...acList.children].forEach((el, i) => el.classList.toggle('active', i === acActive));
+  }
+  function pickAC(i) {
+    const item = acItems[i];
+    if (!item) return;
+    queryEl.value = item.full;
+    state.query = item.full;
+    saveState();
+    hideAC();
+    fetchImagery();
+  }
+
+  async function fetchSuggestions(input) {
+    const trimmed = input.trim();
+    if (trimmed.length < 2 || /^-?\d+(\.\d+)?\s*,/.test(trimmed)) { hideAC(); return; }
+    const key = state.apiKey || EMBEDDED_API_KEY;
+    if (!key) return;
+    const rid = ++acReq;
+    try {
+      const res = await fetch('https://places.googleapis.com/v1/places:autocomplete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Goog-Api-Key': key,
+        },
+        body: JSON.stringify({
+          input: trimmed,
+          includedPrimaryTypes: ['locality','administrative_area_level_1','administrative_area_level_2','administrative_area_level_3','country','neighborhood','sublocality'],
+        }),
+      });
+      if (rid !== acReq) return; // stale
+      const data = await res.json();
+      if (!data.suggestions) { hideAC(); return; }
+      const items = data.suggestions
+        .map(s => {
+          const p = s.placePrediction || {};
+          const sf = p.structuredFormat || {};
+          return {
+            main: sf.mainText?.text || p.text?.text || '',
+            secondary: sf.secondaryText?.text || '',
+            full: p.text?.text || '',
+          };
+        })
+        .filter(x => x.full);
+      renderAC(items);
+    } catch (e) {
+      // silent — autocomplete is progressive enhancement
+    }
+  }
+
+  queryEl.addEventListener('input', () => {
+    clearTimeout(acDebounce);
+    acDebounce = setTimeout(() => fetchSuggestions(queryEl.value), 220);
+  });
+  queryEl.addEventListener('keydown', e => {
+    const open = acList.classList.contains('open');
+    if (open && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      e.preventDefault();
+      const dir = e.key === 'ArrowDown' ? 1 : -1;
+      acActive = Math.max(-1, Math.min(acItems.length - 1, acActive + dir));
+      refreshACActive();
+      return;
+    }
+    if (e.key === 'Enter') {
+      if (open && acActive >= 0) { e.preventDefault(); pickAC(acActive); return; }
+      e.preventDefault(); hideAC(); fetchImagery();
+      return;
+    }
+    if (e.key === 'Escape') { hideAC(); }
+  });
+  queryEl.addEventListener('blur', () => setTimeout(hideAC, 180));
+  queryEl.addEventListener('focus', () => { if (queryEl.value.length >= 2) fetchSuggestions(queryEl.value); });
 
   // ------------------- Upload -------------------
   $('#upload-btn').addEventListener('click', () => $('#upload-input').click());
