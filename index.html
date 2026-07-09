@@ -294,10 +294,10 @@
       <summary>Imagery</summary>
       <div class="panel-body">
         <div class="row full">
-          <input id="apikey" type="password" placeholder="Google Maps API key (Static + Street View + Geocoding)">
+          <input id="apikey" type="password" placeholder="Using embedded key — paste to override">
         </div>
         <div class="hint">
-          Get a key at <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Google Cloud console</a>. Enable <b>Maps Static</b>, <b>Street View Static</b>, and <b>Geocoding</b>. Stored in your browser only.
+          A default key is embedded for the hosted site. Paste your own to override — get one at <a href="https://console.cloud.google.com/google/maps-apis" target="_blank">Google Cloud console</a> with <b>Maps Static</b>, <b>Street View Static</b>, and <b>Geocoding</b> enabled. Overrides live in your browser only.
         </div>
         <div class="row split">
           <button id="upload-btn" class="btn">Upload files…</button>
@@ -482,7 +482,7 @@
     <div id="stage-top">
       <span class="tab active">Design</span>
       <span class="tab" id="preview-tab">Preview</span>
-      <span id="status">Ready. Add an API key and hit “Fetch imagery”, or drag an image in.</span>
+      <span id="status">Ready. Type a place and hit “Fetch imagery”, or drag an image in.</span>
     </div>
 
     <div id="canvas-wrap">
@@ -510,6 +510,11 @@
 <script>
 (() => {
   'use strict';
+
+  // Default Google Maps API key baked into the site.
+  // Restricted to https://tinydogboots.github.io/* + Maps Static / Street View Static / Geocoding only.
+  // Users can override in the sidebar; their override is stored in localStorage.
+  const EMBEDDED_API_KEY = 'AIzaSyA764MJyvzTg6essvW9g2PNVLWUfZ-pZ-A';
 
   // ------------------- State -------------------
   const state = {
@@ -888,7 +893,8 @@
   }
 
   async function fetchImagery() {
-    if (!state.apiKey) {
+    const key = state.apiKey || EMBEDDED_API_KEY;
+    if (!key) {
       setStatus('Add a Google Maps API key first.', 'error');
       return;
     }
@@ -898,7 +904,7 @@
     }
     setStatus('Geocoding ' + state.query + '…', 'loading');
     let center;
-    try { center = await geocode(state.query, state.apiKey); }
+    try { center = await geocode(state.query, key); }
     catch (e) { return setStatus('Geocode failed: ' + e.message, 'error'); }
 
     const rand = mulberry32(state.seed || 1);
@@ -907,11 +913,11 @@
     for (const pt of points) {
       if (state.sources === 'satellite' || state.sources === 'both') {
         const zoom = 17 + Math.floor(rand() * 3); // 17-19
-        jobs.push({ url: satelliteUrl(pt.lat, pt.lng, state.apiKey, zoom), kind: 'sat', label: `sat ${pt.lat.toFixed(4)},${pt.lng.toFixed(4)}` });
+        jobs.push({ url: satelliteUrl(pt.lat, pt.lng, key, zoom), kind: 'sat', label: `sat ${pt.lat.toFixed(4)},${pt.lng.toFixed(4)}` });
       }
       if (state.sources === 'streetview' || state.sources === 'both') {
         const heading = Math.floor(rand() * 360);
-        jobs.push({ url: streetViewUrl(pt.lat, pt.lng, state.apiKey, heading), kind: 'sv', label: `sv ${pt.lat.toFixed(4)},${pt.lng.toFixed(4)} h${heading}`, needsCheck: true, pt });
+        jobs.push({ url: streetViewUrl(pt.lat, pt.lng, key, heading), kind: 'sv', label: `sv ${pt.lat.toFixed(4)},${pt.lng.toFixed(4)} h${heading}`, needsCheck: true, pt });
       }
     }
     setStatus(`Fetching ${jobs.length} images…`, 'loading');
@@ -920,7 +926,7 @@
     const filtered = [];
     for (const job of jobs) {
       if (job.needsCheck) {
-        const ok = await streetViewExists(job.pt.lat, job.pt.lng, state.apiKey);
+        const ok = await streetViewExists(job.pt.lat, job.pt.lng, key);
         if (ok) filtered.push(job);
       } else {
         filtered.push(job);
@@ -1171,8 +1177,9 @@
   });
 
   // Warm intro
-  if (!state.apiKey && !state.images.length) {
-    setStatus('Paste a Google Maps API key or drop images in to start.', '');
+  if (!state.images.length) {
+    const hasKey = state.apiKey || EMBEDDED_API_KEY;
+    setStatus(hasKey ? 'Type a place and hit “Fetch imagery”, or drop images in.' : 'Paste a Google Maps API key or drop images in to start.', '');
   }
 })();
 </script>
