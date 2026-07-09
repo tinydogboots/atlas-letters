@@ -881,12 +881,21 @@
     // Detect "lat,lng"
     const m = query.trim().match(/^(-?\d+(\.\d+)?)\s*,\s*(-?\d+(\.\d+)?)$/);
     if (m) return { lat: +m[1], lng: +m[3] };
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${encodeURIComponent(key)}`;
-    const res = await fetch(url);
+    // Use Places API (New) Text Search — works with website-restricted keys.
+    const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': key,
+        'X-Goog-FieldMask': 'places.location,places.displayName',
+      },
+      body: JSON.stringify({ textQuery: query }),
+    });
     const data = await res.json();
-    if (data.status !== 'OK') throw new Error(data.error_message || data.status || 'geocode failed');
-    const loc = data.results[0].geometry.location;
-    return { lat: loc.lat, lng: loc.lng };
+    if (data.error) throw new Error(data.error.message || 'search failed');
+    if (!data.places || !data.places.length) throw new Error('No results for "' + query + '"');
+    const loc = data.places[0].location;
+    return { lat: loc.latitude, lng: loc.longitude };
   }
 
   function sampleInRadius(center, radiusKm, n, seed) {
