@@ -1043,6 +1043,35 @@
     return photos;
   }
 
+  // Openverse: CC images aggregated from Flickr, Wikimedia, museums, etc. Their /thumb/ endpoint
+  // is served through their own CORS-enabled CDN so canvas won't get tainted.
+  async function searchOpenverse(cityName, limit = 40) {
+    const queries = [
+      `brutalist architecture ${cityName}`,
+      `brutalism ${cityName}`,
+      `concrete building ${cityName}`,
+    ];
+    const seen = new Set();
+    const photos = [];
+    for (const q of queries) {
+      const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(q)}&license_type=all-cc&page_size=${limit}`;
+      try {
+        const res = await fetch(url);
+        if (!res.ok) continue;
+        const data = await res.json();
+        for (const r of (data.results || [])) {
+          if (seen.has(r.id)) continue;
+          seen.add(r.id);
+          photos.push({
+            name: r.title || 'CC photo',
+            url: `https://api.openverse.org/v1/images/${r.id}/thumb/`,
+          });
+        }
+      } catch (e) {}
+    }
+    return photos;
+  }
+
   async function streetViewCoverage(lat, lng, key) {
     try {
       const res = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&source=outdoor&key=${encodeURIComponent(key)}`);
@@ -1064,13 +1093,16 @@
     catch (e) { return setStatus('Location failed: ' + e.message, 'error'); }
 
     setStatus('Searching for brutalist buildings and CC photos in ' + state.query + '…', 'loading');
-    let buildings, ccPhotos;
+    let buildings, commonsPhotos, openversePhotos;
     try {
-      [buildings, ccPhotos] = await Promise.all([
+      [buildings, commonsPhotos, openversePhotos] = await Promise.all([
         findBrutalistBuildings(state.query, center, state.radius, key),
         searchCommonsBrutalist(state.query),
+        searchOpenverse(state.query),
       ]);
     } catch (e) { return setStatus('Search failed: ' + e.message, 'error'); }
+
+    const ccPhotos = [...commonsPhotos, ...openversePhotos];
 
     if (!buildings.length && !ccPhotos.length) {
       return setStatus(`Nothing found for "${state.query}". Try a bigger city.`, 'error');
@@ -1100,8 +1132,8 @@
         filtered.push({ kind: 'sat', building: b, url: satelliteUrl(b.lat, b.lng, key, 19) });
       }
     }
-    // Add CC-licensed Wikimedia photos on top of Street View results.
-    for (const p of ccPhotos.slice(0, 30)) {
+    // Add CC-licensed photos on top of Street View results.
+    for (const p of ccPhotos.slice(0, 60)) {
       filtered.push({ kind: 'cc', building: { name: p.name, lat: 0, lng: 0 }, url: p.url });
     }
 
