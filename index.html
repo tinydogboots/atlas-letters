@@ -365,7 +365,7 @@
       <button data-mode="compose">Compose</button>
     </div>
 
-    <span id="status">Type an address, hit Fetch, then click any image to snip fragments.</span>
+    <span id="status">Type a city — the app finds brutalist buildings there and pulls Street View.</span>
   </header>
 
   <!-- ============ WORKSPACE ============ -->
@@ -377,7 +377,7 @@
         <div class="group-title">Search</div>
         <div class="slider-row">
           <label>Radius km</label>
-          <input id="radius" type="range" min="0.05" max="10" step="0.05" value="0.5">
+          <input id="radius" type="range" min="0.5" max="50" step="0.5" value="10">
           <span class="value" id="radius-val">0.5</span>
         </div>
         <div class="slider-row">
@@ -434,7 +434,9 @@
 
       <div id="images-grid">
         <div class="placeholder">
-          Type an address up top, hit Fetch, and images will appear here.<br>
+          Type a city up top and hit Fetch.<br>
+          The app queries Wikidata for buildings tagged as brutalist near that place,<br>
+          then pulls Street View of each.<br>
           <span class="tag">Click any image to snip a fragment</span>
         </div>
       </div>
@@ -917,6 +919,36 @@
     });
   }
 
+  // Query Wikidata for buildings tagged as Brutalism (and its subclasses) within radius km of a point.
+  async function findBrutalistBuildings(center, radiusKm) {
+    const query = `
+      SELECT DISTINCT ?item ?itemLabel ?coord WHERE {
+        SERVICE wikibase:around {
+          ?item wdt:P625 ?coord .
+          bd:serviceParam wikibase:center "Point(${center.lng} ${center.lat})"^^geo:wktLiteral.
+          bd:serviceParam wikibase:radius "${radiusKm}" .
+        }
+        { ?item wdt:P149 wd:Q184074 . }
+          UNION
+        { ?item wdt:P149/wdt:P279* wd:Q184074 . }
+        SERVICE wikibase:label { bd:serviceParam wikibase:language "en,fr,de,es,it,pt,nl,ja,ru". }
+      }
+      LIMIT 80
+    `;
+    const url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(query);
+    const res = await fetch(url, { headers: { 'Accept': 'application/sparql-results+json' } });
+    if (!res.ok) throw new Error('Wikidata query failed');
+    const data = await res.json();
+    return data.results.bindings.map(b => {
+      const m = b.coord.value.match(/Point\(([-\d.]+) ([-\d.]+)\)/);
+      return {
+        name: b.itemLabel?.value || 'Unknown',
+        lat: +m[2],
+        lng: +m[1],
+      };
+    });
+  }
+
   async function fetchImagery() {
     const key = state.apiKey || EMBEDDED_API_KEY;
     if (!key) return setStatus('Add a Google Maps API key.', 'error');
@@ -928,29 +960,54 @@
     try { center = await geocode(state.query, key); }
     catch (e) { return setStatus('Location failed: ' + e.message, 'error'); }
 
-    const seed = Math.floor(Math.random() * 100000);
-    const rand = mulberry32(seed);
-    const points = sampleInRadius(center, state.radius, state.samples, seed);
-    const jobs = [];
-    for (const pt of points) {
-      if (state.sources === 'satellite' || state.sources === 'both') {
-        const zoom = 18 + Math.floor(rand() * 2);
-        jobs.push({ url: satelliteUrl(pt.lat, pt.lng, key, zoom), kind:'sat', pt });
-      }
-      if (state.sources === 'streetview' || state.sources === 'both') {
-        const heading = Math.floor(rand() * 360);
-        jobs.push({ url: streetViewUrl(pt.lat, pt.lng, key, heading), kind:'sv', needsCheck:true, heading, pt });
-      }
+    setStatus('Searching Wikidata for brutalist buildings…', 'loading');
+    let buildings;
+    try { buildings = await findBrutalistBuildings(center, state.radius); }
+    catch (e) { return setStatus('Search failed: ' + e.message, 'error'); }
+
+    if (!buildings.length) {
+      return setStatus(`No brutalist buildings tagged near "${state.query}" within ${state.radius}km. Try a bigger radius or another city.`, 'error');
     }
 
-    setStatus(`Checking coverage on ${jobs.length}…`, 'loading');
+    // Distribute the total sample budget across the buildings we found.
+    // Bigger cities → more buildings → 1-2 headings each. Small cities → many headings per building.
+    const seed = Math.floor(Math.random() * 100000);
+    const rand = mulberry32(seed);
+    const shuffled = buildings.slice().sort(() => rand() - 0.5);
+    const jobs = [];
+    let bi = 0;
+    while (jobs.length < state.samples && bi < shuffled.length * 6) {
+      const b = shuffled[bi % shuffled.length];
+      const heading = Math.floor(rand() * 360);
+      jobs.push({
+        kind: state.sources === 'satellite' ? 'sat' : 'sv',
+        building: b,
+        heading,
+      });
+      bi++;
+    }
+
+    setStatus(`Found ${buildings.length} brutalist buildings. Checking Street View coverage…`, 'loading');
     const filtered = [];
     for (const j of jobs) {
-      if (j.needsCheck) {
-        if (await streetViewExists(j.pt.lat, j.pt.lng, key)) filtered.push(j);
-      } else filtered.push(j);
+      if (state.sources === 'satellite') {
+        // Satellite always available.
+        j.url = satelliteUrl(j.building.lat, j.building.lng, key, 19);
+        filtered.push(j);
+      } else if (state.sources === 'both') {
+        j.url = satelliteUrl(j.building.lat, j.building.lng, key, 19);
+        filtered.push({ ...j });
+        if (await streetViewExists(j.building.lat, j.building.lng, key)) {
+          filtered.push({ ...j, url: streetViewUrl(j.building.lat, j.building.lng, key, j.heading), kind: 'sv' });
+        }
+      } else {
+        if (await streetViewExists(j.building.lat, j.building.lng, key)) {
+          j.url = streetViewUrl(j.building.lat, j.building.lng, key, j.heading);
+          filtered.push(j);
+        }
+      }
     }
-    if (!filtered.length) return setStatus('No imagery available — try a bigger radius.', 'error');
+    if (!filtered.length) return setStatus('Buildings found but no Street View coverage. Try satellite or a bigger radius.', 'error');
 
     let done = 0;
     setStatus(`Fetching 0/${filtered.length}…`, 'loading');
@@ -958,12 +1015,12 @@
       const img = await loadImage(j.url);
       done++;
       setStatus(`Fetching ${done}/${filtered.length}…`, 'loading');
-      return { img, kind:j.kind, pt:j.pt, heading:j.heading };
+      return { img, kind: j.kind, pt: { lat: j.building.lat, lng: j.building.lng }, heading: j.heading, name: j.building.name };
     }));
     runtime.fetchedImages = results.filter(r => r.status === 'fulfilled').map(r => r.value);
     if (!runtime.fetchedImages.length) return setStatus('All image loads failed. Check API key restrictions.', 'error');
     renderImagesGrid();
-    setStatus(`Loaded ${runtime.fetchedImages.length} from ${state.query}. Click any to snip fragments.`, 'ok');
+    setStatus(`Loaded ${runtime.fetchedImages.length} of ${buildings.length} brutalist buildings near ${state.query}.`, 'ok');
   }
   $('#fetch-btn').addEventListener('click', fetchImagery);
 
@@ -985,8 +1042,12 @@
       card.appendChild(im);
       const meta = document.createElement('div');
       meta.className = 'meta';
-      const kindLabel = entry.kind === 'sv' ? 'street view' : 'satellite';
-      meta.innerHTML = `<span class="kind">${kindLabel}</span><span>${entry.pt.lat.toFixed(4)}, ${entry.pt.lng.toFixed(4)}</span>`;
+      const kindLabel = entry.kind === 'sv' ? 'street' : 'satellite';
+      meta.innerHTML = `<span class="kind">${kindLabel}</span><span title="${escapeHTML(entry.name || '')}">${escapeHTML(entry.name || '')}</span>`;
+      meta.querySelector('span:last-child').style.overflow = 'hidden';
+      meta.querySelector('span:last-child').style.textOverflow = 'ellipsis';
+      meta.querySelector('span:last-child').style.whiteSpace = 'nowrap';
+      meta.querySelector('span:last-child').style.maxWidth = '75%';
       card.appendChild(meta);
       card.addEventListener('click', () => openPicker(entry));
       grid.appendChild(card);
