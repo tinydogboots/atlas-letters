@@ -919,8 +919,50 @@
     });
   }
 
-  // Query Wikidata for buildings tagged as Brutalism (and its subclasses) within radius km of a point.
-  async function findBrutalistBuildings(center, radiusKm) {
+  // --- Building discovery ---
+  // Places Text Search (Google Maps places): searches for "brutalist buildings/architecture in {city}"
+  // and returns places (landmarks, buildings, POIs) matching the query.
+  async function searchPlacesBrutalist(cityName, center, radiusKm, key) {
+    const terms = [
+      `brutalist architecture in ${cityName}`,
+      `brutalist buildings in ${cityName}`,
+    ];
+    const out = [];
+    for (const textQuery of terms) {
+      const body = { textQuery, pageSize: 20 };
+      if (center) body.locationBias = {
+        circle: {
+          center: { latitude: center.lat, longitude: center.lng },
+          radius: Math.min(50000, radiusKm * 1000),
+        }
+      };
+      try {
+        const res = await fetch('https://places.googleapis.com/v1/places:searchText', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': key,
+            'X-Goog-FieldMask': 'places.id,places.displayName,places.location,places.formattedAddress',
+          },
+          body: JSON.stringify(body),
+        });
+        const data = await res.json();
+        if (data.places) for (const p of data.places) {
+          out.push({
+            id: p.id,
+            name: p.displayName?.text || 'Unknown',
+            lat: p.location.latitude,
+            lng: p.location.longitude,
+            address: p.formattedAddress || '',
+          });
+        }
+      } catch (e) {}
+    }
+    return out;
+  }
+
+  // Fallback / augment: Wikidata catches obscure buildings (Yugoslav monuments, listed housing estates) that Google Maps may not surface.
+  async function searchWikidataBrutalist(center, radiusKm) {
     const query = `
       SELECT DISTINCT ?item ?itemLabel ?coord WHERE {
         SERVICE wikibase:around {
@@ -928,25 +970,56 @@
           bd:serviceParam wikibase:center "Point(${center.lng} ${center.lat})"^^geo:wktLiteral.
           bd:serviceParam wikibase:radius "${radiusKm}" .
         }
-        { ?item wdt:P149 wd:Q184074 . }
-          UNION
-        { ?item wdt:P149/wdt:P279* wd:Q184074 . }
+        { ?item wdt:P149 wd:Q184074 . } UNION { ?item wdt:P149/wdt:P279* wd:Q184074 . }
         SERVICE wikibase:label { bd:serviceParam wikibase:language "en,fr,de,es,it,pt,nl,ja,ru". }
-      }
-      LIMIT 80
+      } LIMIT 80
     `;
     const url = 'https://query.wikidata.org/sparql?format=json&query=' + encodeURIComponent(query);
-    const res = await fetch(url, { headers: { 'Accept': 'application/sparql-results+json' } });
-    if (!res.ok) throw new Error('Wikidata query failed');
-    const data = await res.json();
-    return data.results.bindings.map(b => {
-      const m = b.coord.value.match(/Point\(([-\d.]+) ([-\d.]+)\)/);
-      return {
-        name: b.itemLabel?.value || 'Unknown',
-        lat: +m[2],
-        lng: +m[1],
-      };
-    });
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/sparql-results+json' } });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.results.bindings.map(b => {
+        const m = b.coord.value.match(/Point\(([-\d.]+) ([-\d.]+)\)/);
+        return { name: b.itemLabel?.value || 'Unknown', lat: +m[2], lng: +m[1] };
+      });
+    } catch (e) { return []; }
+  }
+
+  async function findBrutalistBuildings(cityName, center, radiusKm, key) {
+    const [pl, wd] = await Promise.all([
+      searchPlacesBrutalist(cityName, center, radiusKm, key),
+      searchWikidataBrutalist(center, radiusKm),
+    ]);
+    // Dedupe by rough coordinate (~50m)
+    const seen = new Set();
+    const merged = [];
+    for (const b of [...pl, ...wd]) {
+      const k = `${b.lat.toFixed(3)},${b.lng.toFixed(3)}`;
+      if (seen.has(k)) continue;
+      seen.add(k);
+      merged.push(b);
+    }
+    return merged;
+  }
+
+  // Compute compass heading from (fromLat,fromLng) toward (toLat,toLng), so we can aim the Street View camera at the building.
+  function headingTo(fromLat, fromLng, toLat, toLng) {
+    const rad = Math.PI / 180;
+    const φ1 = fromLat * rad, φ2 = toLat * rad;
+    const Δλ = (toLng - fromLng) * rad;
+    const y = Math.sin(Δλ) * Math.cos(φ2);
+    const x = Math.cos(φ1) * Math.sin(φ2) - Math.sin(φ1) * Math.cos(φ2) * Math.cos(Δλ);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  }
+
+  async function streetViewCoverage(lat, lng, key) {
+    try {
+      const res = await fetch(`https://maps.googleapis.com/maps/api/streetview/metadata?location=${lat},${lng}&source=outdoor&key=${encodeURIComponent(key)}`);
+      const data = await res.json();
+      if (data.status !== 'OK') return null;
+      return { pano: data.pano_id, lat: data.location.lat, lng: data.location.lng };
+    } catch (e) { return null; }
   }
 
   async function fetchImagery() {
@@ -960,54 +1033,40 @@
     try { center = await geocode(state.query, key); }
     catch (e) { return setStatus('Location failed: ' + e.message, 'error'); }
 
-    setStatus('Searching Wikidata for brutalist buildings…', 'loading');
+    setStatus('Searching for brutalist buildings in ' + state.query + '…', 'loading');
     let buildings;
-    try { buildings = await findBrutalistBuildings(center, state.radius); }
+    try { buildings = await findBrutalistBuildings(state.query, center, state.radius, key); }
     catch (e) { return setStatus('Search failed: ' + e.message, 'error'); }
 
     if (!buildings.length) {
-      return setStatus(`No brutalist buildings tagged near "${state.query}" within ${state.radius}km. Try a bigger radius or another city.`, 'error');
+      return setStatus(`No brutalist buildings found for "${state.query}". Try a bigger city.`, 'error');
     }
 
-    // Distribute the total sample budget across the buildings we found.
-    // Bigger cities → more buildings → 1-2 headings each. Small cities → many headings per building.
+    // Cap number of buildings to state.samples. Each will get 1 Street View shot aimed at it.
     const seed = Math.floor(Math.random() * 100000);
     const rand = mulberry32(seed);
-    const shuffled = buildings.slice().sort(() => rand() - 0.5);
-    const jobs = [];
-    let bi = 0;
-    while (jobs.length < state.samples && bi < shuffled.length * 6) {
-      const b = shuffled[bi % shuffled.length];
-      const heading = Math.floor(rand() * 360);
-      jobs.push({
-        kind: state.sources === 'satellite' ? 'sat' : 'sv',
-        building: b,
-        heading,
-      });
-      bi++;
-    }
+    const shuffled = buildings.slice().sort(() => rand() - 0.5).slice(0, state.samples);
 
-    setStatus(`Found ${buildings.length} brutalist buildings. Checking Street View coverage…`, 'loading');
+    setStatus(`Found ${buildings.length} brutalist buildings. Aiming Street View…`, 'loading');
     const filtered = [];
-    for (const j of jobs) {
+    for (const b of shuffled) {
       if (state.sources === 'satellite') {
-        // Satellite always available.
-        j.url = satelliteUrl(j.building.lat, j.building.lng, key, 19);
-        filtered.push(j);
+        filtered.push({ kind: 'sat', building: b, url: satelliteUrl(b.lat, b.lng, key, 19) });
+        continue;
+      }
+      // Street View — aim the camera at the building from the nearest panorama.
+      const cov = await streetViewCoverage(b.lat, b.lng, key);
+      if (cov) {
+        const heading = headingTo(cov.lat, cov.lng, b.lat, b.lng);
+        filtered.push({ kind: 'sv', building: b, heading, url: streetViewUrl(b.lat, b.lng, key, heading) });
       } else if (state.sources === 'both') {
-        j.url = satelliteUrl(j.building.lat, j.building.lng, key, 19);
-        filtered.push({ ...j });
-        if (await streetViewExists(j.building.lat, j.building.lng, key)) {
-          filtered.push({ ...j, url: streetViewUrl(j.building.lat, j.building.lng, key, j.heading), kind: 'sv' });
-        }
-      } else {
-        if (await streetViewExists(j.building.lat, j.building.lng, key)) {
-          j.url = streetViewUrl(j.building.lat, j.building.lng, key, j.heading);
-          filtered.push(j);
-        }
+        filtered.push({ kind: 'sat', building: b, url: satelliteUrl(b.lat, b.lng, key, 19) });
+      }
+      if (state.sources === 'both' && cov) {
+        filtered.push({ kind: 'sat', building: b, url: satelliteUrl(b.lat, b.lng, key, 19) });
       }
     }
-    if (!filtered.length) return setStatus('Buildings found but no Street View coverage. Try satellite or a bigger radius.', 'error');
+    if (!filtered.length) return setStatus('Buildings found but no Street View coverage. Try satellite mode.', 'error');
 
     let done = 0;
     setStatus(`Fetching 0/${filtered.length}…`, 'loading');
@@ -1015,7 +1074,7 @@
       const img = await loadImage(j.url);
       done++;
       setStatus(`Fetching ${done}/${filtered.length}…`, 'loading');
-      return { img, kind: j.kind, pt: { lat: j.building.lat, lng: j.building.lng }, heading: j.heading, name: j.building.name };
+      return { img, kind: j.kind, pt: { lat: j.building.lat, lng: j.building.lng }, heading: j.heading, name: j.building.name, address: j.building.address };
     }));
     runtime.fetchedImages = results.filter(r => r.status === 'fulfilled').map(r => r.value);
     if (!runtime.fetchedImages.length) return setStatus('All image loads failed. Check API key restrictions.', 'error');
