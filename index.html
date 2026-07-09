@@ -543,6 +543,9 @@
   // Users can override in the sidebar; their override is stored in localStorage.
   const EMBEDDED_API_KEY = 'AIzaSyA764MJyvzTg6essvW9g2PNVLWUfZ-pZ-A';
 
+  // Declared up here (not near render()) because bindSeg triggers scheduleRender during init.
+  let pending = false;
+
   // ------------------- State -------------------
   const state = {
     // Location
@@ -1158,7 +1161,6 @@
   }
 
   // ------------------- Render -------------------
-  let pending = false;
   function scheduleRender() {
     if (pending) return;
     pending = true;
